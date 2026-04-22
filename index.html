@@ -407,9 +407,49 @@
     }
     #pause-overlay.active { display: flex; }
     .pause-title { font-size: 2rem; font-weight: 900; margin-bottom: 8px; }
+
+    /* ── ROTATE PROMPT ───────────────────────────────────────── */
+    #rotate-prompt {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 9999;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      text-align: center;
+      padding: 32px;
+    }
+    #rotate-prompt .rotate-icon {
+      font-size: 4rem;
+      animation: rotate-hint 1.5s ease-in-out infinite;
+    }
+    @keyframes rotate-hint {
+      0%   { transform: rotate(0deg); }
+      40%  { transform: rotate(90deg); }
+      60%  { transform: rotate(90deg); }
+      100% { transform: rotate(0deg); }
+    }
+    #rotate-prompt p {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--dim);
+      max-width: 260px;
+    }
+    @media (orientation: portrait) {
+      #rotate-prompt { display: flex; }
+    }
   </style>
 </head>
 <body>
+
+<!-- ROTATE PROMPT -->
+<div id="rotate-prompt">
+  <div class="rotate-icon">📱</div>
+  <p>Rotate your phone to play</p>
+</div>
 
 <!-- HOME -->
 <div id="screen-home" class="screen active">
@@ -741,6 +781,11 @@ function playAgain() {
   g.scoreB = 0;
   startRound();
 }
+
+// ── Orientation lock ──────────────────────────────────────────────────────────
+(async () => {
+  try { await screen.orientation.lock('landscape'); } catch (_) {}
+})();
 
 // ── Audio engine ──────────────────────────────────────────────────────────────
 let _actx = null;
