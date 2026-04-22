@@ -633,6 +633,7 @@ function startRound() {
   g.timerLeft = g.timerDur;
   showScreen('game-round');
   runTimer();
+  startTicking();
   requestWakeLock();
 }
 
@@ -649,24 +650,29 @@ function runTimer() {
 
 function pauseGame() {
   clearInterval(g.timerID);
+  stopTicking();
   document.getElementById('pause-overlay').classList.add('active');
 }
 
 function resumeGame() {
   document.getElementById('pause-overlay').classList.remove('active');
   runTimer();
+  resumeTicking();
 }
 
 function goHome() {
   clearInterval(g.timerID);
+  stopTicking();
   document.getElementById('pause-overlay').classList.remove('active');
   showScreen('home');
 }
 
 function onTimesUp() {
+  stopTicking();
+  playExplosion();
   if (navigator.vibrate) navigator.vibrate([300, 100, 300]);
   showScreen('times-up');
-  setTimeout(showRoundResult, 1000);
+  setTimeout(showRoundResult, 1500);
 }
 
 // ── Round result ──────────────────────────────────────────────────────────────
@@ -700,6 +706,7 @@ function nextRound() {
 function showWinner(name) {
   document.getElementById('winner-display').textContent = name;
   showScreen('game-finalized');
+  playCelebration();
   if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
 }
 
@@ -707,6 +714,134 @@ function playAgain() {
   g.scoreA = 0;
   g.scoreB = 0;
   startRound();
+}
+
+// ── Audio engine ──────────────────────────────────────────────────────────────
+let _actx = null;
+function actx() {
+  if (!_actx) _actx = new (window.AudioContext || window.webkitAudioContext)();
+  if (_actx.state === 'suspended') _actx.resume();
+  return _actx;
+}
+
+// Unlock audio on first user interaction (required by iOS Safari)
+document.addEventListener('touchstart', () => actx(), { once: true });
+document.addEventListener('click',      () => actx(), { once: true });
+
+function playTick(vol) {
+  const c = actx();
+  const t = c.currentTime;
+  const osc  = c.createOscillator();
+  const gain = c.createGain();
+  osc.connect(gain);
+  gain.connect(c.destination);
+  osc.frequency.setValueAtTime(1200, t);
+  osc.frequency.exponentialRampToValueAtTime(500, t + 0.04);
+  gain.gain.setValueAtTime(vol, t);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+  osc.start(t);
+  osc.stop(t + 0.05);
+}
+
+function playExplosion() {
+  const c = actx();
+  const t = c.currentTime;
+
+  // Deep bass thump
+  const bass = c.createOscillator();
+  const bassGain = c.createGain();
+  bass.frequency.setValueAtTime(120, t);
+  bass.frequency.exponentialRampToValueAtTime(25, t + 0.6);
+  bassGain.gain.setValueAtTime(1.2, t);
+  bassGain.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+  bass.connect(bassGain);
+  bassGain.connect(c.destination);
+  bass.start(t); bass.stop(t + 0.7);
+
+  // White noise crackle
+  const frames = c.sampleRate * 1.2;
+  const buf  = c.createBuffer(1, frames, c.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < frames; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / frames);
+  const noise = c.createBufferSource();
+  noise.buffer = buf;
+  const filt = c.createBiquadFilter();
+  filt.type = 'bandpass';
+  filt.frequency.value = 600;
+  filt.Q.value = 0.4;
+  const noiseGain = c.createGain();
+  noiseGain.gain.setValueAtTime(0.9, t);
+  noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 1.2);
+  noise.connect(filt); filt.connect(noiseGain); noiseGain.connect(c.destination);
+  noise.start(t);
+}
+
+function playCelebration() {
+  const c = actx();
+  // Ascending arpeggio then a chord burst
+  const notes = [
+    { f: 523,  t: 0.00, d: 0.18 },
+    { f: 659,  t: 0.14, d: 0.18 },
+    { f: 784,  t: 0.28, d: 0.18 },
+    { f: 1047, t: 0.42, d: 0.50 },
+    { f: 784,  t: 0.44, d: 0.48 },
+    { f: 523,  t: 0.46, d: 0.48 },
+  ];
+  notes.forEach(({ f, t, d }) => {
+    const start = c.currentTime + t;
+    const osc  = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = 'square';
+    osc.frequency.value = f;
+    gain.gain.setValueAtTime(0, start);
+    gain.gain.linearRampToValueAtTime(0.18, start + 0.02);
+    gain.gain.setValueAtTime(0.18, start + d - 0.04);
+    gain.gain.linearRampToValueAtTime(0, start + d);
+    osc.connect(gain); gain.connect(c.destination);
+    osc.start(start); osc.stop(start + d + 0.02);
+  });
+}
+
+// ── Ticking engine ────────────────────────────────────────────────────────────
+// Runs on its own fake schedule (7–15 s) that differs from the real timer (5–8 s)
+// so the speed-up creates tension without revealing when the explosion happens.
+let _tickTO    = null;
+let _tickT0    = 0;   // timestamp when current session started
+let _tickAcc   = 0;   // accumulated elapsed ms from previous sessions
+let _tickMax   = 0;   // fake total duration for this round (ms)
+
+function startTicking() {
+  stopTicking();
+  _tickAcc  = 0;
+  _tickMax  = 7000 + Math.random() * 8000;  // 7–15 s fake duration
+  _tickT0   = Date.now();
+  _scheduleTick();
+}
+
+function stopTicking() {
+  clearTimeout(_tickTO);
+  _tickTO = null;
+  if (_tickT0) { _tickAcc += Date.now() - _tickT0; _tickT0 = 0; }
+}
+
+function resumeTicking() {
+  _tickT0 = Date.now();
+  _scheduleTick();
+}
+
+function _scheduleTick() {
+  const elapsed  = _tickAcc + (_tickT0 ? Date.now() - _tickT0 : 0);
+  const progress = Math.min(elapsed / _tickMax, 1);
+
+  // Interval shrinks from ~950 ms down to ~100 ms
+  const base     = 100 + (1 - progress) * 850;
+  // ±30 % random jitter so consecutive ticks are never perfectly uniform
+  const interval = base * (0.7 + Math.random() * 0.6);
+
+  _tickTO = setTimeout(() => {
+    playTick(0.25 + progress * 0.65);
+    _scheduleTick();
+  }, Math.max(80, interval));
 }
 
 // ── Screen wake lock (prevents phone sleeping mid-game) ───────────────────────
