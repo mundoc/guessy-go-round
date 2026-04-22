@@ -629,7 +629,7 @@ function changeWord() {
 // ── Round & timer ─────────────────────────────────────────────────────────────
 function startRound() {
   changeWord();
-  g.timerDur  = 5 + Math.random() * 3;   // 5 – 8 seconds (secret!)
+  g.timerDur  = 45 + Math.random() * 15;  // 45 – 60 seconds (secret!)
   g.timerLeft = g.timerDur;
   showScreen('game-round');
   runTimer();
@@ -813,7 +813,7 @@ let _tickMax   = 0;   // fake total duration for this round (ms)
 function startTicking() {
   stopTicking();
   _tickAcc  = 0;
-  _tickMax  = 7000 + Math.random() * 8000;  // 7–15 s fake duration
+  _tickMax  = 50000 + Math.random() * 20000;  // 50–70 s fake duration
   _tickT0   = Date.now();
   _scheduleTick();
 }
