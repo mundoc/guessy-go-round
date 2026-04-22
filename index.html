@@ -734,16 +734,31 @@ document.addEventListener('click',      () => actx(), { once: true });
 function playTick(vol) {
   const c = actx();
   const t = c.currentTime;
-  const osc  = c.createOscillator();
-  const gain = c.createGain();
-  osc.connect(gain);
-  gain.connect(c.destination);
-  osc.frequency.setValueAtTime(1200, t);
-  osc.frequency.exponentialRampToValueAtTime(500, t + 0.04);
-  gain.gain.setValueAtTime(vol, t);
-  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
-  osc.start(t);
-  osc.stop(t + 0.05);
+
+  // Sharp noise transient — the "click" of a mechanical relay
+  const clickFrames = Math.floor(c.sampleRate * 0.004); // 4 ms
+  const clickBuf  = c.createBuffer(1, clickFrames, c.sampleRate);
+  const clickData = clickBuf.getChannelData(0);
+  for (let i = 0; i < clickFrames; i++) clickData[i] = Math.random() * 2 - 1;
+  const click = c.createBufferSource();
+  click.buffer = clickBuf;
+  const hiPass = c.createBiquadFilter();
+  hiPass.type = 'highpass';
+  hiPass.frequency.value = 2500;
+  const clickGain = c.createGain();
+  clickGain.gain.setValueAtTime(vol * 2.0, t);
+  clickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.018);
+  click.connect(hiPass); hiPass.connect(clickGain); clickGain.connect(c.destination);
+  click.start(t);
+
+  // Tiny low body thud — gives it weight without any pitch sweep
+  const thud = c.createOscillator();
+  const thudGain = c.createGain();
+  thud.frequency.setValueAtTime(160, t);
+  thudGain.gain.setValueAtTime(vol * 0.7, t);
+  thudGain.gain.exponentialRampToValueAtTime(0.001, t + 0.018);
+  thud.connect(thudGain); thudGain.connect(c.destination);
+  thud.start(t); thud.stop(t + 0.02);
 }
 
 function playExplosion() {
