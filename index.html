@@ -235,11 +235,84 @@
     .instr-card li { margin-bottom: 8px; color: var(--dim); line-height: 1.5; font-size: 0.95rem; }
     .instr-card li strong { color: var(--text); }
 
+    /* ── FRENZY CARD SCREEN ──────────────────────────────────── */
+    #screen-frenzy-card {
+      justify-content: center;
+      gap: 16px;
+      background: radial-gradient(ellipse at 50% 40%, #2d1040 0%, #0e0e1a 70%);
+    }
+    .frenzy-tag {
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--orange);
+    }
+    .frenzy-card-emoji { font-size: 5rem; margin-bottom: 4px; }
+    .frenzy-card-label {
+      font-size: clamp(1.8rem, 8vw, 3rem);
+      font-weight: 900;
+      text-align: center;
+      line-height: 1.1;
+    }
+    .frenzy-card-desc {
+      color: var(--dim);
+      text-align: center;
+      font-size: 1rem;
+      max-width: 300px;
+      line-height: 1.5;
+    }
+
+    /* ── CHALLENGE FLASH ─────────────────────────────────────── */
+    #challenge-flash {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      background: var(--orange);
+      color: #000;
+      padding: 16px 20px;
+      text-align: center;
+      z-index: 300;
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+    }
+    #challenge-flash.active { display: block; }
+
+    /* ── FRENZY RULE BADGE ───────────────────────────────────── */
+    .frenzy-rule-badge {
+      position: absolute;
+      top: 12px;
+      left: 0; right: 0;
+      text-align: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--orange);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      pointer-events: none;
+    }
+
+    /* ── DOUBLE POINTS BANNER ────────────────────────────────── */
+    .double-banner {
+      background: rgba(247,127,0,0.12);
+      border: 2px solid var(--orange);
+      border-radius: 12px;
+      padding: 12px 16px;
+      color: var(--orange);
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-align: center;
+      width: 100%;
+      max-width: 400px;
+    }
+
     /* ── GAME ROUND ──────────────────────────────────────────── */
     #screen-game-round {
       justify-content: space-between;
       padding: 0;
       gap: 0;
+      position: relative;
     }
     .word-area {
       flex: 1;
@@ -483,6 +556,14 @@
   </div>
 
   <div class="form-group">
+    <div class="form-label">Game Mode</div>
+    <div class="toggle-row">
+      <div class="toggle-opt on" id="mode-normal-opt" onclick="setGameMode('normal')">Normal</div>
+      <div class="toggle-opt"    id="mode-frenzy-opt" onclick="setGameMode('frenzy')">⚡ Frenzy</div>
+    </div>
+  </div>
+
+  <div class="form-group">
     <div class="form-label">Language</div>
     <div class="toggle-row">
       <div class="toggle-opt on" id="lang-en-opt" onclick="setLang('en')">🇬🇧 English</div>
@@ -539,8 +620,21 @@
   <button class="btn btn-primary" onclick="showScreen('home')" style="max-width:380px;width:100%;">Got it!</button>
 </div>
 
+<!-- FRENZY CARD -->
+<div id="screen-frenzy-card" class="screen">
+  <div class="frenzy-tag">⚡ Frenzy Mode</div>
+  <div class="frenzy-card-emoji" id="frenzy-emoji">🎮</div>
+  <div class="frenzy-card-label" id="frenzy-label">Normal Round</div>
+  <div class="frenzy-card-desc"  id="frenzy-desc">Play as usual!</div>
+  <button class="btn btn-primary" onclick="startRound()" style="margin-top:16px; max-width:280px;">Got it! →</button>
+</div>
+
+<!-- CHALLENGE FLASH -->
+<div id="challenge-flash">🎯 CHALLENGE — Guess 2 words before passing!</div>
+
 <!-- GAME ROUND -->
 <div id="screen-game-round" class="screen">
+  <div class="frenzy-rule-badge" id="frenzy-rule-badge"></div>
   <div class="word-area">
     <div class="word-text" id="current-word">—</div>
   </div>
@@ -577,6 +671,7 @@
       </div>
     </div>
   </div>
+  <div class="double-banner" id="double-banner" style="display:none;">⚡ Double Points Round! — Give 2× the points scored</div>
   <div class="first-to-label" id="first-to-label">First to 5 wins</div>
   <button class="btn btn-primary" onclick="nextRound()" style="max-width:380px;width:100%;">Next Round →</button>
 </div>
@@ -604,6 +699,15 @@ const WORDS_EN = {"Entertainment":["Inception","The Matrix","Titanic","Avatar","
 const WORDS_DE = {"Unterhaltung":[...WORDS_EN["Entertainment"]],"Popkultur":[...WORDS_EN["Pop Culture"]],"Geographie":[...WORDS_EN["Geography"]],"Natur":["Löwe","Tiger","Elefant","Delfin","Känguru","Panda","Giraffe","Pinguin","Hai","Zebra","Gepard","Koala","Wal","Wolf","Bär","Hase","Pferd","Fuchs","Gorilla","Faultier","Jaguar","Leopard","Wisent","Luchs","Otter","Vielfraß","Puma","Hyäne","Alligator","Krokodil","Papagei","Adler","Falke","Pfau","Habicht","Eule","Fledermaus","Antilope","Büffel","Nashorn","Gazelle","Gürteltier","Biber","Dachs","Kojote","Lama","Kamel","Schnabeltier","Weißkopfseeadler","Pelikan","Albatros","Ara","Komododrache","Schuppentier","Seekuh","Robbe","Walross","Seestern","Oktopus","Kalmar","Clownfisch","Schwertfisch","Lachs","Rose","Tulpe","Gänseblümchen","Lilie","Orchidee","Sonnenblume","Nelke","Veilchen","Chrysantheme","Narzisse","Lavendel","Iris","Mohn","Jasmin","Ringelblume","Kaktus","Bambus","Palme","Dahlie","Glockenblume","Hyazinthe","Stiefmütterchen","Kamelie","Freesie","Flieder","Gardenie","Azalee","Geranie","Begonie","Petunie","Löwenmaul","Fuchsie","Hibiskus","Magnolie","Löwenzahn","Minze","Thymian","Rosmarin","Oregano","Salbei","Basilikum","Koriander","Fenchel","Estragon"],"Essen & Trinken":["Apfel","Banane","Mango","Ananas","Erdbeere","Kiwi","Pfirsich","Pflaume","Wassermelone","Heidelbeere","Himbeere","Papaya","Trauben","Orange","Zitrone","Granatapfel","Kirsche","Avocado","Drachenfrucht","Passionsfrucht","Kokosnuss","Brombeere","Birne","Jackfrucht","Karambole","Pizza","Burger","Sushi","Pasta","Tacos","Sandwich","Steak","Eis","Schokolade","Salat","Suppe","Pommes","Reis","Hot Dog","Pfannkuchen","Lasagne","Ramen","Curry","Dim Sum","Gebratenes Hühnchen","Burrito","Falafel","Shawarma","Paella","Frühlingsrollen","Moussaka","Gyros","Ravioli","Chili","Churros","Wurst","Knödel","Gulasch","Risotto","Ceviche","Samosa","Coca-Cola","Wasser","Whiskey","Kaffee","Orangensaft","Tee","Limonade","Bier","Eistee","Wein","Champagner","Milch","Pepsi","Mojito","Wodka","Smoothie","Rum","Gin","Martini","Margarita","Tequila","Heiße Schokolade","Eiskaffee","Espresso","Cappuccino","Macchiato","Aperol Spritz","Fanta","Sangria","Red Bull","Prosecco","Matcha Latte"],"Sport":["Manchester United","FC Barcelona","Bayern München","Liverpool FC","Real Madrid","Juventus","Chelsea FC","AC Milan","Arsenal FC","Paris Saint-Germain","Los Angeles Lakers","Chicago Bulls","Golden State Warriors","Boston Celtics","Miami Heat","Dallas Mavericks","New York Yankees","Los Angeles Dodgers","New England Patriots","Dallas Cowboys","Green Bay Packers","Kansas City Chiefs","Abseits","Touchdown","Home Run","Freiwurf","Dribbling","Slam Dunk","Elfmeter","Eckstoß","Rote Karte","Gelbe Karte","Ass","Breakball","Konter","Vorlage","Überzahl","Torwart","Auswechslung","Verlängerung","Auszeit","Tackle","Satz","Ballwechsel","Fehler","Stoppball","Stürmer","Endzone","Penaltyschuss","Hakenwurf","Huddle","Par","Birdie","Bogey","Caddie"],"Geschichte & Politik":[...WORDS_EN["History & Politics"]],"Wissenschaft & Technik":["Newtons Gesetze","Relativitätstheorie","Quantenmechanik","Periodensystem","DNS","Photosynthese","Evolution","Schwerkraft","Atome","Moleküle","Der Urknall","Reibung","Elektromagnetische Wellen","Schwarze Löcher","Zellteilung","Plattentektonik","Neuronen","Stammzellen","Kernspaltung","Osmose","Magnetfelder","Genetische Mutation","Entropie","Supraleitung","Dunkle Materie","Chlorophyll","Chromosomen","Antikörper","Mitose","Gravitationswellen","Kovalente Bindung","Elektrolyse","Genbearbeitung","Higgs-Boson","Telefon","Glühbirne","Penizillin","Druckmaschine","Flugzeug","Internet","Dampfmaschine","Kamera","Fernseher","Rad","Elektrizität","Kühlschrank","Laser","Radio","Plastik","Röntgenstrahlen","Impfstoff","Kompass","Schreibmaschine","Automobil","Aspirin","Mikroskop","Smartphone","Dynamit","Zahnbürste","Batterie","Solarpanel","Aufzug","U-Boot","Düsentriebwerk","Hubschrauber","Computer","Antibiotika","Benzinmotor","Grippe","Asthma","Diabetes","Allergien","Migräne","Bronchitis","Herzerkrankung","Krebs","Bluthochdruck","Arthritis","Schlaganfall","Lungenentzündung","Epilepsie","Anämie","Alzheimer","Multiple Sklerose","Parkinson","HIV/AIDS","Tuberkulose","Zöliakie","Nierenerkrankung","Schuppenflechte","Hepatitis","Rheumatoide Arthritis","Demenz","Sodbrennen","Zystische Fibrose","Lupus","Leukämie","Schizophrenie"],"Alltag":["Gartenarbeit","Malen","Stricken","Fotografie","Vogelbeobachtung","Kochen","Angeln","Fahrrad fahren","Lesen","Schreiben","Zeichnen","Tanzen","Bildhauerei","Laufen","Musikinstrumente spielen","Reisen","Schwimmen","Töpfern","Yoga","Klettern","Reiten","Videospiele","Tischlerei","Schach spielen","Sprachen lernen","Tagebuch schreiben","Kuchen backen","Wandern","Ehrenamtliche Arbeit","Sternengucken","Filme schauen","Schmuck herstellen","Brettspiele spielen","Camping","Bungee Jumping","Meditieren","Kerzen herstellen","Tennis spielen","Marathon laufen","Modellbauen","Münzen sammeln","Kreuzworträtsel","Kalligraphie lernen","Lego bauen","Zimmerpflanzen","Hemd","Hose","Kleid","Pullover","Jacke","Jeans","Shorts","Rock","T-Shirt","Schuhe","Stiefel","Turnschuhe","Hut","Schal","Handschuhe","Socken","Gürtel","Sweatshirt","Anzug","Krawatte","Bluse","Strickjacke","Tanktop","Schlafanzug","Leggings","Overall","Regenmantel","Flip-Flops","Sandalen","Trainingsanzug","Kapuzenpullover","Arzt","Ingenieur","Lehrer","Krankenpfleger","Anwalt","Koch","Künstler","Musiker","Schauspieler","Wissenschaftler","Schriftsteller","Journalist","Fotograf","Feuerwehrmann","Polizist","Tierarzt","Architekt","Designer","Therapeut","Datenanalyst","Biologe","Psychologe","Zahnarzt","Apotheker","Softwareentwickler","Elektriker","Zimmermann","Mechaniker","Bauer","Buchhalter","Sozialarbeiter","Eventmanager"],"Mysterien & Glauben":["Schwarze Katze","Spiegel zerbrechen","Unter einer Leiter durchgehen","Glückliches Hufeisen","Vierblättriges Kleeblatt","Hasenpfote","Salz über die Schulter werfen","Freitag der 13.","Auf Holz klopfen","Daumen drücken","Salz verschütten","Wunschknochen","Drinnen pfeifen","Regenschirm im Haus öffnen","Auf eine Ritze treten","Reis bei Hochzeiten werfen","Sternschnuppe sehen","Münze in den Brunnen werfen","Der böse Blick","Doppelgänger","Münze aufheben","Vollmond","Weiße Taube","Die Hand der Fatima","Teeblätter lesen","Flackernde Kerzen","Die Zahl 13","Juckende Handflächen","Dreimal niesen in Folge","Von Fischen träumen","Eine Eule tagsüber sehen"],"Redewendungen":["Ein Kinderspiel","In den sauren Apfel beißen","Den Nagel auf den Kopf treffen","Die Nacht zum Tag machen","Das Eis brechen","Aus der Schule plaudern","Den Löffel abgeben","Auf den Punkt kommen","Im Handumdrehen","Brücken abbrennen","Durch Dick und Dünn","Aus heiterem Himmel","Das Handtuch werfen","Feierabend machen","Auf den Zug aufspringen","Die Katze aus dem Sack lassen","Ein Glück im Unglück","In der Klemme sitzen","Taten sagen mehr als Worte","Der frühe Vogel fängt den Wurm","Schlafende Hunde soll man nicht wecken","Aus den Augen aus dem Sinn","Jemanden die kalte Schulter zeigen","Mit Vorsicht zu genießen","Den Stier bei den Hörnern packen","Wieder von vorne anfangen","Auf dünnem Eis","Ein Bild sagt mehr als tausend Worte","Probieren geht über Studieren","Ohne Fleiß kein Preis","Viele Köche verderben den Brei","Zu einem Tango gehören zwei","Wie man in den Wald hineinruft so schallt es heraus"],"Verschiedenes":["Rot","Blau","Grün","Gelb","Orange","Lila","Rosa","Braun","Schwarz","Weiß","Grau","Gold","Silber","Cyan","Magenta","Burgunderrot","Lavendelblau","Blaugrün","Pfirsich","Kastanienbraun","Kreis","Quadrat","Dreieck","Rechteck","Fünfeck","Sechseck","Achteck","Raute","Trapez","Ellipse","Oval","Würfel","Zylinder","Kugel","Kegel","Pyramide","Stern","Halbmond","Pfeil","Diamant"]};
 
 // ── State ──────────────────────────────────────────────────────────────────────
+const FRENZY_CARDS = [
+  { id: 'normal',    label: 'Normal Round',    desc: 'Play as usual — no special rules!',                    emoji: '🎮', weight: 25 },
+  { id: 'sounds',    label: 'Sounds Only',     desc: 'No words at all — only sounds and noises!',            emoji: '🔊', weight: 16 },
+  { id: 'gestures',  label: 'Gestures Only',   desc: 'No words — only body language and gestures!',          emoji: '🙌', weight: 16 },
+  { id: 'questions', label: 'Questions Only',  desc: 'You can only describe using questions!',               emoji: '❓', weight: 14 },
+  { id: 'oneword',   label: 'One Word Only',   desc: 'Pick one word and repeat it as many times as you like.', emoji: '💬', weight: 14 },
+  { id: 'double',    label: 'Double Points!',  desc: 'Every point scored this round counts as 2!',           emoji: '⚡', weight: 15 },
+];
+
 const g = {
   teamA: 'Team A',
   teamB: 'Team B',
@@ -611,6 +715,10 @@ const g = {
   scoreB: 0,
   pointsToWin: 5,
   lang: 'en',
+  frenzy: false,
+  frenzyCard: null,
+  frenzyDouble: false,
+  challengeFired: false,
   catMode: 'all',
   selCats: Object.keys(WORDS_EN),
   pool: [],
@@ -638,6 +746,41 @@ function setLang(l) {
   g.selCats = Object.keys(wb());
 }
 
+function setGameMode(m) {
+  g.frenzy = m === 'frenzy';
+  document.getElementById('mode-normal-opt').classList.toggle('on', m === 'normal');
+  document.getElementById('mode-frenzy-opt').classList.toggle('on', m === 'frenzy');
+}
+
+function pickFrenzyCard() {
+  const total = FRENZY_CARDS.reduce((s, c) => s + c.weight, 0);
+  let r = Math.random() * total;
+  for (const card of FRENZY_CARDS) { r -= card.weight; if (r <= 0) return card; }
+  return FRENZY_CARDS[0];
+}
+
+function beforeRound() {
+  if (g.frenzy) {
+    const card = pickFrenzyCard();
+    g.frenzyCard   = card;
+    g.frenzyDouble = card.id === 'double';
+    document.getElementById('frenzy-emoji').textContent = card.emoji;
+    document.getElementById('frenzy-label').textContent = card.label;
+    document.getElementById('frenzy-desc').textContent  = card.desc;
+    showScreen('frenzy-card');
+  } else {
+    g.frenzyCard   = null;
+    g.frenzyDouble = false;
+    startRound();
+  }
+}
+
+function showChallengeFlash() {
+  const el = document.getElementById('challenge-flash');
+  el.classList.add('active');
+  setTimeout(() => el.classList.remove('active'), 2500);
+}
+
 // ── Setup ──────────────────────────────────────────────────────────────────────
 function adjustPoints(d) {
   g.pointsToWin = Math.min(12, Math.max(1, g.pointsToWin + d));
@@ -662,7 +805,7 @@ function startGame() {
   } else {
     g.selCats = Object.keys(wb());
     buildPool();
-    startRound();
+    beforeRound();
   }
 }
 
@@ -696,7 +839,7 @@ function toggleAll() {
 function confirmCats() {
   if (!g.selCats.length) return;
   buildPool();
-  startRound();
+  beforeRound();
 }
 
 // ── Word pool ─────────────────────────────────────────────────────────────────
@@ -711,13 +854,22 @@ function pickWord() {
 function changeWord() {
   g.word = pickWord();
   document.getElementById('current-word').textContent = g.word;
+  if (g.frenzy && !g.challengeFired && Math.random() < 0.08) {
+    g.challengeFired = true;
+    showChallengeFlash();
+  }
 }
 
 // ── Round & timer ─────────────────────────────────────────────────────────────
 function startRound() {
+  g.challengeFired = false;
   changeWord();
   g.timerDur  = 45 + Math.random() * 15;  // 45 – 60 seconds (secret!)
   g.timerLeft = g.timerDur;
+  const badge = document.getElementById('frenzy-rule-badge');
+  badge.textContent = (g.frenzy && g.frenzyCard && g.frenzyCard.id !== 'normal')
+    ? g.frenzyCard.emoji + '  ' + g.frenzyCard.label
+    : '';
   showScreen('game-round');
   runTimer();
   startTicking();
@@ -768,6 +920,7 @@ function showRoundResult() {
   document.getElementById('res-nameA').textContent = g.teamA;
   document.getElementById('res-nameB').textContent = g.teamB;
   document.getElementById('first-to-label').textContent = 'First to ' + g.pointsToWin + ' wins';
+  document.getElementById('double-banner').style.display = g.frenzyDouble ? 'block' : 'none';
   refreshScores();
   showScreen('round-result');
 }
@@ -778,15 +931,18 @@ function refreshScores() {
 }
 
 function adjustScore(team, d) {
-  if (team === 'A') g.scoreA = Math.max(0, Math.min(g.pointsToWin, g.scoreA + d));
-  else              g.scoreB = Math.max(0, Math.min(g.pointsToWin, g.scoreB + d));
+  // In double points rounds each button press adds/removes 2
+  const pts = g.frenzyDouble ? d * 2 : d;
+  const cap = g.frenzyDouble ? g.pointsToWin * 3 : g.pointsToWin;
+  if (team === 'A') g.scoreA = Math.max(0, Math.min(cap, g.scoreA + pts));
+  else              g.scoreB = Math.max(0, Math.min(cap, g.scoreB + pts));
   refreshScores();
 }
 
 function nextRound() {
   if (g.scoreA >= g.pointsToWin) return showWinner(g.teamA);
   if (g.scoreB >= g.pointsToWin) return showWinner(g.teamB);
-  startRound();
+  beforeRound();
 }
 
 // ── Winner ────────────────────────────────────────────────────────────────────
@@ -800,7 +956,7 @@ function showWinner(name) {
 function playAgain() {
   g.scoreA = 0;
   g.scoreB = 0;
-  startRound();
+  beforeRound();
 }
 
 // ── Orientation lock ──────────────────────────────────────────────────────────
