@@ -839,7 +839,7 @@ let _tickMax   = 0;   // fake total duration for this round (ms)
 function startTicking() {
   stopTicking();
   _tickAcc  = 0;
-  _tickMax  = 50000 + Math.random() * 20000;  // 50–70 s fake duration
+  _tickMax  = 22000 + Math.random() * 38000;  // 22–60 s fake duration (sometimes fast phase kicks in early)
   _tickT0   = Date.now();
   _scheduleTick();
 }
@@ -859,10 +859,12 @@ function _scheduleTick() {
   const elapsed  = _tickAcc + (_tickT0 ? Date.now() - _tickT0 : 0);
   const progress = Math.min(elapsed / _tickMax, 1);
 
-  // Interval shrinks from ~950 ms down to ~100 ms
-  const base     = 100 + (1 - progress) * 850;
-  // ±30 % random jitter so consecutive ticks are never perfectly uniform
-  const interval = base * (0.7 + Math.random() * 0.6);
+  // Power curve: stays slow longer then accelerates hard at the end
+  const curve    = Math.pow(progress, 1.6);
+  // Interval shrinks from ~950 ms down to ~60 ms
+  const base     = 60 + (1 - curve) * 890;
+  // ±25% jitter so ticks never feel perfectly metronomic
+  const interval = Math.max(60, base * (0.75 + Math.random() * 0.5));
 
   _tickTO = setTimeout(() => {
     playTick(0.25 + progress * 0.65);
