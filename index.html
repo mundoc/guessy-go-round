@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Guessy-Go-Round</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    :root {
+      --bg: #0e0e1a;
+      --card: #181828;
+      --border: #2a2a45;
+      --red: #e94560;
+      --blue: #4361ee;
+      --orange: #f77f00;
+      --green: #06d6a0;
+      --text: #f0f0f8;
+      --dim: #7a7a9a;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* ── Screens ─────────────────────────────────────────────── */
+    .screen {
+      display: none;
+      min-height: 100vh;
+      min-height: 100dvh;
+      width: 100%;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 20px 40px;
+      gap: 16px;
+    }
+    .screen.active { display: flex; }
+
+    /* ── Shared components ───────────────────────────────────── */
+    .screen-title {
+      font-size: 1.7rem;
+      font-weight: 900;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .btn {
+      width: 100%;
+      max-width: 340px;
+      padding: 16px 20px;
+      border: none;
+      border-radius: 14px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      transition: transform 0.08s, opacity 0.08s;
+    }
+    .btn:active { transform: scale(0.96); opacity: 0.85; }
+    .btn-primary  { background: linear-gradient(135deg, #e94560, #b5193b); color: #fff; }
+    .btn-blue     { background: var(--blue); color: #fff; }
+    .btn-orange   { background: var(--orange); color: #fff; }
+    .btn-green    { background: var(--green); color: #000; }
+    .btn-ghost    { background: transparent; color: var(--dim); border: 2px solid var(--border); }
+
+    /* ── HOME ────────────────────────────────────────────────── */
+    #screen-home {
+      justify-content: center;
+      gap: 20px;
+      background: radial-gradient(ellipse at 50% 30%, #1e1040 0%, #0e0e1a 70%);
+    }
+    .home-logo {
+      font-size: clamp(2.2rem, 9vw, 3.8rem);
+      font-weight: 900;
+      text-align: center;
+      line-height: 1.1;
+      background: linear-gradient(130deg, #f77f00, #e94560 60%, #9b5de5);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 4px;
+    }
+    .home-sub {
+      color: var(--dim);
+      text-align: center;
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+    }
+
+    /* ── SETUP ───────────────────────────────────────────────── */
+    .form-group {
+      width: 100%;
+      max-width: 380px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .form-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+    }
+    .form-input {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 1.05rem;
+      padding: 13px 16px;
+      outline: none;
+      width: 100%;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus { border-color: var(--red); }
+    .form-input::placeholder { color: var(--dim); }
+
+    .stepper {
+      display: flex;
+      align-items: center;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .stepper-btn {
+      background: none;
+      border: none;
+      color: var(--text);
+      width: 52px;
+      height: 52px;
+      font-size: 1.6rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .stepper-btn:active { background: var(--border); }
+    .stepper-val {
+      flex: 1;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 800;
+    }
+
+    .toggle-row {
+      display: flex;
+      width: 100%;
+      max-width: 380px;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .toggle-opt {
+      flex: 1;
+      padding: 12px 8px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--dim);
+      transition: all 0.15s;
+      border-radius: 0;
+    }
+    .toggle-opt.on {
+      background: linear-gradient(135deg, #e94560, #b5193b);
+      color: #fff;
+    }
+
+    /* ── CATEGORIES ──────────────────────────────────────────── */
+    .cat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+      max-width: 420px;
+    }
+    .cat-toggle {
+      padding: 13px 8px;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      background: var(--card);
+      color: var(--dim);
+      text-align: center;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 700;
+      line-height: 1.3;
+      transition: all 0.15s;
+    }
+    .cat-toggle.on {
+      border-color: var(--green);
+      color: var(--green);
+      background: rgba(6, 214, 160, 0.08);
+    }
+    .cat-toggle:active { transform: scale(0.96); }
+    .sel-all-btn {
+      background: none;
+      border: 1.5px solid var(--border);
+      color: var(--dim);
+      padding: 8px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    /* ── INSTRUCTIONS ────────────────────────────────────────── */
+    .instr-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--card);
+      border-radius: 16px;
+      border: 2px solid var(--border);
+      padding: 24px 20px;
+    }
+    .instr-card h3 {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--red);
+      margin-bottom: 10px;
+    }
+    .instr-card h3:not(:first-child) { margin-top: 20px; }
+    .instr-card ol { padding-left: 18px; }
+    .instr-card li { margin-bottom: 8px; color: var(--dim); line-height: 1.5; font-size: 0.95rem; }
+    .instr-card li strong { color: var(--text); }
+
+    /* ── GAME ROUND ──────────────────────────────────────────── */
+    #screen-game-round {
+      justify-content: space-between;
+      padding-top: 60px;
+      padding-bottom: 48px;
+      gap: 0;
+    }
+    .word-area {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 0 12px;
+    }
+    .word-text {
+      font-size: clamp(2.4rem, 11vw, 5.5rem);
+      font-weight: 900;
+      text-align: center;
+      line-height: 1.15;
+      word-break: break-word;
+      hyphens: auto;
+    }
+    .round-buttons {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      max-width: 340px;
+    }
+
+    /* ── TIMES UP ────────────────────────────────────────────── */
+    #screen-times-up {
+      background: #c10a2e;
+      justify-content: center;
+      align-items: center;
+      gap: 0;
+      padding: 0;
+    }
+    .times-up-text {
+      font-size: clamp(3rem, 14vw, 6.5rem);
+      font-weight: 900;
+      text-align: center;
+      letter-spacing: -1px;
+      animation: shook 0.25s ease-in-out infinite alternate;
+    }
+    @keyframes shook {
+      from { transform: rotate(-3deg) scale(0.97); }
+      to   { transform: rotate(3deg)  scale(1.05); }
+    }
+
+    /* ── ROUND RESULT ────────────────────────────────────────── */
+    #screen-round-result { justify-content: center; gap: 18px; }
+    .last-word-info {
+      color: var(--dim);
+      font-size: 0.9rem;
+      text-align: center;
+    }
+    .last-word-info span { color: var(--text); font-weight: 700; }
+    .teams-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      width: 100%;
+      max-width: 400px;
+    }
+    .team-card {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 10px;
+      text-align: center;
+    }
+    .t-name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--dim);
+      margin-bottom: 10px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .t-score {
+      font-size: 3rem;
+      font-weight: 900;
+      margin-bottom: 10px;
+      line-height: 1;
+    }
+    .score-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+    .sc-btn {
+      background: var(--border);
+      border: none;
+      color: var(--text);
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+    .sc-btn:active { opacity: 0.7; }
+    .first-to-label {
+      color: var(--dim);
+      font-size: 0.82rem;
+      text-align: center;
+    }
+
+    /* ── GAME FINALIZED ──────────────────────────────────────── */
+    #screen-game-finalized {
+      justify-content: center;
+      gap: 16px;
+      background: radial-gradient(ellipse at 50% 40%, #1e1040 0%, #0e0e1a 70%);
+    }
+    .trophy { font-size: 5rem; text-align: center; margin-bottom: 4px; }
+    .wins-label { color: var(--dim); font-size: 0.9rem; }
+    .winner-name {
+      font-size: clamp(2.2rem, 10vw, 4.5rem);
+      font-weight: 900;
+      text-align: center;
+      background: linear-gradient(130deg, #f77f00, #e94560);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    /* ── PAUSE OVERLAY ───────────────────────────────────────── */
+    #pause-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 10, 20, 0.92);
+      z-index: 200;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      backdrop-filter: blur(6px);
+    }
+    #pause-overlay.active { display: flex; }
+    .pause-title { font-size: 2rem; font-weight: 900; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="screen-home" class="screen active">
+  <div class="home-logo">Guessy-Go-Round</div>
+  <div class="home-sub">The phone-passing word guessing game</div>
+  <button class="btn btn-primary" onclick="showScreen('setup')">Setup Game</button>
+  <button class="btn btn-ghost"   onclick="showScreen('instructions')">How to Play</button>
+</div>
+
+<!-- SETUP -->
+<div id="screen-setup" class="screen">
+  <div class="screen-title">Game Setup</div>
+
+  <div class="form-group">
+    <div class="form-label">Team 1 Name</div>
+    <input class="form-input" type="text" id="teamA-input" placeholder="Team A" maxlength="20">
+  </div>
+
+  <div class="form-group">
+    <div class="form-label">Team 2 Name</div>
+    <input class="form-input" type="text" id="teamB-input" placeholder="Team B" maxlength="20">
+  </div>
+
+  <div class="form-group">
+    <div class="form-label">Points to Win</div>
+    <div class="stepper">
+      <button class="stepper-btn" onclick="adjustPoints(-1)">−</button>
+      <span class="stepper-val" id="pts-display">5</span>
+      <button class="stepper-btn" onclick="adjustPoints(1)">+</button>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <div class="form-label">Categories</div>
+    <div class="toggle-row">
+      <div class="toggle-opt on" id="cat-all-opt" onclick="setCatMode('all')">All Categories</div>
+      <div class="toggle-opt"    id="cat-pick-opt" onclick="setCatMode('pick')">Choose</div>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" onclick="startGame()" style="margin-top:4px;">Start Game</button>
+  <button class="btn btn-ghost"   onclick="showScreen('home')">Back</button>
+</div>
+
+<!-- CATEGORIES -->
+<div id="screen-categories" class="screen">
+  <div class="screen-title">Choose Categories</div>
+  <button class="sel-all-btn" onclick="toggleAll()">Select / Deselect All</button>
+  <div class="cat-grid" id="cat-grid"></div>
+  <button class="btn btn-primary" onclick="confirmCats()" style="max-width:380px;width:100%;">Confirm</button>
+  <button class="btn btn-ghost"   onclick="showScreen('setup')" style="max-width:380px;width:100%;">Back</button>
+</div>
+
+<!-- INSTRUCTIONS -->
+<div id="screen-instructions" class="screen">
+  <div class="screen-title">How to Play</div>
+  <div class="instr-card">
+    <h3>Setup</h3>
+    <ol>
+      <li>Enter names for both teams and choose how many points are needed to win.</li>
+      <li>Pick which word categories you want in the game.</li>
+    </ol>
+    <h3>Each Round</h3>
+    <ol>
+      <li>One player holds the phone — only they can see the word on screen.</li>
+      <li>Give clues to your team without saying the word itself.</li>
+      <li>Tap <strong>Change Word</strong> to skip to a different word.</li>
+      <li>The timer runs secretly — it goes off at a random time between 5 and 8 seconds!</li>
+    </ol>
+    <h3>Scoring</h3>
+    <ol>
+      <li>After each round, use the <strong>+ / −</strong> buttons to update the scores.</li>
+      <li>First team to reach the points goal wins! 🏆</li>
+    </ol>
+  </div>
+  <button class="btn btn-primary" onclick="showScreen('home')" style="max-width:380px;width:100%;">Got it!</button>
+</div>
+
+<!-- GAME ROUND -->
+<div id="screen-game-round" class="screen">
+  <div class="word-area">
+    <div class="word-text" id="current-word">—</div>
+  </div>
+  <div class="round-buttons">
+    <button class="btn btn-blue"   onclick="changeWord()">Change Word</button>
+    <button class="btn btn-orange" style="max-width:180px;" onclick="pauseGame()">Pause</button>
+  </div>
+</div>
+
+<!-- TIMES UP -->
+<div id="screen-times-up" class="screen">
+  <div class="times-up-text">⏰ TIME'S UP!</div>
+</div>
+
+<!-- ROUND RESULT -->
+<div id="screen-round-result" class="screen">
+  <div class="screen-title">Round Over</div>
+  <div class="last-word-info">Last word: <span id="last-word-display">—</span></div>
+  <div class="teams-row">
+    <div class="team-card">
+      <div class="t-name"  id="res-nameA">Team A</div>
+      <div class="t-score" id="res-scoreA">0</div>
+      <div class="score-row">
+        <button class="sc-btn" onclick="adjustScore('A',-1)">−</button>
+        <button class="sc-btn" onclick="adjustScore('A', 1)">+</button>
+      </div>
+    </div>
+    <div class="team-card">
+      <div class="t-name"  id="res-nameB">Team B</div>
+      <div class="t-score" id="res-scoreB">0</div>
+      <div class="score-row">
+        <button class="sc-btn" onclick="adjustScore('B',-1)">−</button>
+        <button class="sc-btn" onclick="adjustScore('B', 1)">+</button>
+      </div>
+    </div>
+  </div>
+  <div class="first-to-label" id="first-to-label">First to 5 wins</div>
+  <button class="btn btn-primary" onclick="nextRound()" style="max-width:380px;width:100%;">Next Round →</button>
+</div>
+
+<!-- GAME FINALIZED -->
+<div id="screen-game-finalized" class="screen">
+  <div class="trophy">🏆</div>
+  <div class="wins-label">WINNER</div>
+  <div class="winner-name" id="winner-display">Team A</div>
+  <button class="btn btn-primary" onclick="playAgain()" style="max-width:340px;width:100%;">Play Again</button>
+  <button class="btn btn-ghost"   onclick="showScreen('home')" style="max-width:340px;width:100%;">Go to Start</button>
+</div>
+
+<!-- PAUSE OVERLAY -->
+<div id="pause-overlay">
+  <div class="pause-title">⏸ Paused</div>
+  <button class="btn btn-green" onclick="resumeGame()" style="max-width:280px;width:100%;">Resume</button>
+  <button class="btn btn-ghost" onclick="goHome()"     style="max-width:280px;width:100%;">Home</button>
+</div>
+
+<script>
+// ── Word list ──────────────────────────────────────────────────────────────────
+const WORDS = {"Entertainment":["Inception","The Matrix","Titanic","Avatar","The Godfather","Pulp Fiction","The Dark Knight","Forrest Gump","The Shawshank Redemption","Gladiator","The Lord of the Rings","Star Wars: A New Hope","The Avengers","The Lion King","Interstellar","Jurassic Park","The Departed","Goodfellas","Schindler's List","The Godfather Part II","Star Wars: The Empire Strikes Back","The Prestige","The Dark Knight Rises","The Green Mile","Fight Club","The Revenant","The Terminator","The Big Lebowski","Gone with the Wind","12 Angry Men","One Flew Over the Cuckoo's Nest","Citizen Kane","The Silence of the Lambs","Casablanca","A Clockwork Orange","The Wizard of Oz","It's a Wonderful Life","The Usual Suspects","Django Unchained","Blade Runner","Back to the Future","E.T. the Extra-Terrestrial","Jaws","A Beautiful Mind","The Social Network","The King's Speech","Parasite","Spirited Away","Black Panther","La La Land","The Incredibles","Frozen","Shrek","Friends","Breaking Bad","Game of Thrones","The Office","Stranger Things","The Crown","Narcos","The Simpsons","The Mandalorian","Black Mirror","The Witcher","Money Heist","Peaky Blinders","The Big Bang Theory","Rick and Morty","Sherlock","The Walking Dead","Westworld","Suits","Better Call Saul","The Boys","Chernobyl","The Handmaid's Tale","True Detective","Fargo","Mad Men","Fleabag","Brooklyn Nine-Nine","House of Cards","Doctor Who","Community","Vikings","Dark","BoJack Horseman","Taylor Swift","Leonardo DiCaprio","Beyoncé","Brad Pitt","Angelina Jolie","Will Smith","Tom Cruise","Scarlett Johansson","Dwayne Johnson","Rihanna","Emma Watson","Meryl Streep","Johnny Depp","Jennifer Lawrence","Chris Hemsworth","Kate Winslet","Julia Roberts","George Clooney","Morgan Freeman","Robert Downey Jr.","Ryan Reynolds","Emma Stone","Chris Pratt","Anne Hathaway","Matthew McConaughey","Natalie Portman","Hugh Jackman","Keanu Reeves","Tom Hanks","Margot Robbie","Denzel Washington","Nicole Kidman","Al Pacino","Jack Nicholson","Samuel L. Jackson","Harrison Ford","Matt Damon","Bohemian Rhapsody","Imagine","Like a Rolling Stone","Hey Jude","Billie Jean","Smells Like Teen Spirit","Thriller","Shape of You","Sweet Child O' Mine","Rolling in the Deep","Stayin' Alive","Let It Be","Uptown Funk","I Will Always Love You","Shake It Off","Stairway to Heaven","Hallelujah","Someone Like You","All of Me","Livin' on a Prayer","Don't Stop Believin'","Purple Rain","What a Wonderful World","Respect","My Heart Will Go On","Africa","Eye of the Tiger","Let It Go","Hello","We Are the Champions","Take On Me","Rocket Man","1984","Pride and Prejudice","The Great Gatsby","To Kill a Mockingbird","Moby Dick","Harry Potter","The Hobbit","Crime and Punishment","War and Peace","Brave New World","The Hunger Games","Fahrenheit 451","The Alchemist","Don Quixote","The Da Vinci Code","Frankenstein","Dracula","Les Misérables","The Grapes of Wrath","Of Mice and Men","Anna Karenina","Little Women","The Bell Jar","Super Mario","Minecraft","The Legend of Zelda","Fortnite","Pokemon","Tetris","Call of Duty","Grand Theft Auto","FIFA","League of Legends","World of Warcraft","Overwatch","Halo","Street Fighter","Animal Crossing","Valorant","Candy Crush","Counter Strike","Rocket League","Apex Legends","The Sims","Skyrim","Red Dead Redemption","Assassin's Creed","Mortal Kombat","The Witcher 3","Super Smash Bros.","Among Us","Harry Potter","Sherlock Holmes","James Bond","Darth Vader","Indiana Jones","Forrest Gump","The Joker","Hannibal Lecter","Batman","Spiderman","Wonder Woman","Captain America","Iron Man","Thor","Black Panther","Hulk","Deadpool","Superman","Wolverine","Thanos","Loki","Adele","Ed Sheeran","Billie Eilish","Shakira","Eminem","Kanye West","Lizzo","Post Malone","Ariana Grande","Drake","Lady Gaga","Justin Bieber","Bruno Mars","Katy Perry","Sam Smith","Miley Cyrus","Sia","Maroon 5","Travis Scott","Elton John","The Weeknd","Selena Gomez","Justin Timberlake","Frank Ocean","Shawn Mendes","Lil Nas X","Cardi B","Kendrick Lamar","Bob Dylan","Stevie Wonder","George Michael","Janis Joplin"],"Pop Culture":["Ford Focus","Chevrolet Camaro","Chrysler Pacifica","Mazda MX-5","Hyundai Elantra","Jeep Wrangler","Dodge Charger","BMW i8","Lexus","Audi","BMW","Tesla","Nissan","Porsche 911","Kia","Subaru","Toyota Prius","Volkswagen Golf","Harley-Davidson","Yamaha","Ducati","Honda","Ford F-150","Mini Cooper","Ferrari","Cadillac Escalade","Nike Air Max","Adidas Yeezy","Converse Chuck Taylor","Vans Old Skool","Puma Suede","Reebok Classic","Air Jordan 1","Nike Air Force 1","Crocs","Timberland Boots","Dr. Martens","Birkenstock","Ugg Boots","North Face","Patagonia","Gucci","Louis Vuitton","Chanel","Prada","Dior","Versace","Balenciaga","Hermès","Michael Kors","Ray-Ban","Tom Ford","Rolex","Omega","Tag Heuer","TikTok","Twitter","Snapchat","Pinterest","Reddit","WhatsApp","LinkedIn","Twitch","Discord","Hulu","Amazon Prime Video","Apple TV+","HBO Max","Disney+","Spotify","YouTube","Instagram","Netflix","Microsoft","Facebook","Google","Amazon","Sony"],"Geography":["Afghanistan","Albania","Algeria","Argentina","Australia","Austria","Bangladesh","Belgium","Bolivia","Brazil","Bulgaria","Cambodia","Canada","Chile","China","Colombia","Croatia","Cuba","Czech Republic","Denmark","Ecuador","Egypt","El Salvador","Ethiopia","Finland","France","Germany","Ghana","Greece","Guatemala","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Latvia","Lebanon","Libya","Lithuania","Luxembourg","Madagascar","Malaysia","Mali","Malta","Mexico","Moldova","Monaco","Mongolia","Montenegro","Morocco","Myanmar","Nepal","Netherlands","New Zealand","Nicaragua","Nigeria","North Korea","Norway","Oman","Pakistan","Panama","Paraguay","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saudi Arabia","Senegal","Serbia","Singapore","Slovakia","Slovenia","Somalia","South Africa","Spain","Sri Lanka","Sudan","Sweden","Switzerland","Syria","Taiwan","Tanzania","Thailand","Tunisia","Turkey","Uganda","Ukraine","United Arab Emirates","United Kingdom","United States","Uruguay","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe","Bangkok","San Francisco","Los Angeles","Chicago","Dubai","Buenos Aires","Mexico City","Cape Town","Mumbai","Jakarta","São Paulo","Seoul","London","New York","Paris","Berlin","Rome","Melbourne","Hong Kong","Toronto","Beijing","Moscow","Milan","Lisbon","Kuala Lumpur","Amsterdam","Vienna","Athens","Geneva","Singapore","Copenhagen","Stockholm","Barcelona","Miami","Vancouver","Rio de Janeiro","Cairo","Manchester","Nairobi","Nile","Amazon","Yangtze","Mississippi","Danube","Ganges","Thames","Rhine","Mekong","Volga","Seine","Colorado","Indus","Yellow River","Zambezi","Niger","Euphrates","Tigris","Congo","Hudson","Mount Everest","K2","Kangchenjunga","Mount Kilimanjaro","Mount Fuji","Mont Blanc","Matterhorn","Denali","Mount Elbrus","Mount Aconcagua","Mount Etna","Mount Ararat","Mount Rainier","Mount Fuji","Mount St. Helens"],"Nature":["Lion","Tiger","Elephant","Dolphin","Kangaroo","Panda","Giraffe","Penguin","Shark","Zebra","Cheetah","Koala","Whale","Wolf","Bear","Rabbit","Horse","Fox","Gorilla","Sloth","Jaguar","Leopard","Bison","Lynx","Otter","Wolverine","Cougar","Hyena","Alligator","Crocodile","Parrot","Eagle","Falcon","Peacock","Hawk","Owl","Bat","Antelope","Buffalo","Rhinoceros","Gazelle","Armadillo","Beaver","Badger","Coyote","Llama","Camel","Platypus","Bald Eagle","Pelican","Albatross","Macaw","Komodo Dragon","Pangolin","Manatee","Seal","Walrus","Starfish","Octopus","Squid","Clownfish","Swordfish","Salmon","Rose","Tulip","Daisy","Lily","Orchid","Sunflower","Carnation","Violet","Chrysanthemum","Daffodil","Lavender","Iris","Poppy","Jasmine","Marigold","Cactus","Bamboo","Palm","Dahlia","Bluebell","Hyacinth","Pansy","Camellia","Freesia","Lilac","Gardenia","Azalea","Geranium","Begonia","Petunia","Snapdragon","Fuchsia","Hibiscus","Magnolia","Dandelion","Mint","Thyme","Rosemary","Oregano","Sage","Basil","Cilantro","Fennel","Tarragon"],"Food & Drinks":["Apple","Banana","Mango","Pineapple","Strawberry","Kiwi","Peach","Plum","Watermelon","Blueberry","Raspberry","Papaya","Grapes","Orange","Lemon","Pomegranate","Cherry","Avocado","Dragon Fruit","Passion Fruit","Coconut","Lychee","Cranberry","Blackberry","Pear","Jackfruit","Starfruit","Persimmon","Pizza","Burger","Sushi","Pasta","Tacos","Sandwich","Steak","Ice Cream","Chocolate","Salad","Soup","Fries","Rice","Hot Dog","Pancakes","Lasagna","Ramen","Curry","Dim Sum","Fried Chicken","Fish Tacos","Poke Bowl","Banh Mi","Pho","Burrito","Hot Wings","Falafel","Shawarma","Paella","Tamales","Spring Rolls","Quesadilla","Empanada","Moussaka","Gyros","Ravioli","Chili","Churros","Sausage","Dumplings","Gumbo","Chow Mein","Bangers and Mash","Goulash","Risotto","Ceviche","Samosa","Coca-Cola","Water","Whiskey","Coffee","Orange Juice","Tea","Lemonade","Beer","Iced Tea","Soda","Wine","Champagne","Milk","Pepsi","Gatorade","Mojito","Vodka","Smoothie","Rum","Gin","Martini","Margarita","Tequila","Pina Colada","Hot Chocolate","Iced Coffee","Espresso","Cappuccino","Macchiato","Lassi","Aperol Spritz","Fanta","Sangria","Negroni","Red Bull","Bloody Mary","Cosmopolitan","Pisco Sour","Moscow Mule","Prosecco","Matcha Latte"],"Sports":["Manchester United","FC Barcelona","Bayern Munich","Liverpool FC","Real Madrid","Juventus","Chelsea FC","AC Milan","Arsenal FC","Paris Saint-Germain","Los Angeles Lakers","Chicago Bulls","Golden State Warriors","Boston Celtics","Miami Heat","Dallas Mavericks","New York Yankees","Los Angeles Dodgers","Chicago Cubs","Boston Red Sox","New England Patriots","Dallas Cowboys","Green Bay Packers","San Francisco 49ers","Kansas City Chiefs","Offside","Fumble","Strikeout","Touchdown","Home Run","Free Throw","Dribble","Layup","Slam Dunk","Penalty Kick","Corner Kick","Red Card","Yellow Card","Grand Slam","Ace","Break Point","Fast Break","Blowout","No-Hitter","Triple Play","Double Play","Assist","Fastball","Curveball","Scrimmage","Power Play","Goalkeeper","Substitution","Overtime","Sudden Death","Timeout","Quarterback","Running Back","Wide Receiver","Tackle","Interception","Punt","Field Goal","Pick and Roll","Birdie","Bogey","Eagle","Par","Caddie","Volley","Set","Match","Rally","Fault","Drop Shot","Buzzer Beater","Triple Double","Batting Average","Striker","Spare","Strike","Steal","End Zone","Safety","Shutout","Penalty Shot","Hook Shot","Huddle"],"History & Politics":["Albert Einstein","Mahatma Gandhi","Abraham Lincoln","Marie Curie","Martin Luther King Jr.","Winston Churchill","Nelson Mandela","Cleopatra","Julius Caesar","Galileo Galilei","Isaac Newton","Leonardo da Vinci","Charles Darwin","Alexander the Great","Napoleon Bonaparte","Socrates","Christopher Columbus","Queen Elizabeth I","Benjamin Franklin","Franklin D. Roosevelt","John F. Kennedy","George Washington","Josephine Baker","Simón Bolívar","Theodore Roosevelt","Genghis Khan","Catherine the Great","Mao Zedong","King Henry VIII","Thomas Jefferson","Che Guevara","Barack Obama","Angela Merkel","Margaret Thatcher","Leon Trotsky","Indira Gandhi","Rosa Parks","Queen Victoria","Karl Marx","John Locke","Voltaire","Jean-Jacques Rousseau","Marcus Aurelius","Dwight D. Eisenhower","Richard Nixon","Fidel Castro","Frida Kahlo","Marco Polo","James Madison","Harriet Tubman","Malcolm X","Alexander Hamilton","Anne Frank","Florence Nightingale","Walt Disney","Alfred Nobel","William Shakespeare","Michelangelo","Charles de Gaulle","Mark Twain","Thomas Edison","Henry Ford","Marie Antoinette","Andy Warhol","Salvador Dalí","Eleanor Roosevelt","Queen Elizabeth II","Pablo Picasso","Vladimir Putin","Diana, Princess of Wales","Marco Polo","Jean-Paul Sartre","Mother Teresa"],"Science & Technology":["Newton's Laws","Einstein's Theory of Relativity","Quantum Mechanics","Periodic Table","DNA","Photosynthesis","Evolution","Gravity","Atoms","Molecules","The Big Bang Theory","Friction","Electromagnetic Waves","Black Holes","Cell Division","Plate Tectonics","Neurons","Stem Cells","Nuclear Fission","Osmosis","Magnetic Fields","Genetic Mutation","Entropy","Superconductivity","Dark Matter","Chlorophyll","Chromosomes","Antibodies","Mitosis","Gravity Waves","Covalent Bond","Electrolysis","Gene Editing","Higgs Boson","Telephone","Lightbulb","Penicillin","Printing Press","Airplane","Internet","Steam Engine","Camera","Television","Wheel","Electricity","Refrigerator","Laser","Radio","Plastic","X-ray","Vaccine","Compass","Typewriter","Automobile","Aspirin","Microscope","Smartphone","Dynamite","Toothbrush","Battery","Solar Panel","Elevator","Submarine","Jet Engine","Helicopter","Computer","Antibiotics","Gasoline Engine","Flu","Asthma","Diabetes","Allergies","Migraine","Bronchitis","Heart Disease","Cancer","Hypertension","Arthritis","Stroke","Pneumonia","Epilepsy","Anemia","Alzheimer's Disease","Multiple Sclerosis","Parkinson's Disease","HIV/AIDS","Tuberculosis","Celiac Disease","Kidney Disease","Psoriasis","Hepatitis","Rheumatoid Arthritis","Dementia","Acid Reflux","Cystic Fibrosis","Lupus","Leukemia","Schizophrenia"],"Daily Life":["Gardening","Painting","Knitting","Photography","Bird Watching","Cooking","Fishing","Cycling","Reading","Writing","Drawing","Dancing","Sculpting","Running","Playing Musical Instruments","Traveling","Swimming","Pottery","Yoga","Rock Climbing","Horseback Riding","Video Gaming","Woodworking","Scrapbooking","Chess Playing","Learning Languages","Journaling","Baking Cakes","Hiking","Volunteering","Stargazing","Watching Movies","Making Jewelry","Home Brewing","Playing Board Games","Camping","Bungee Jumping","Meditating","Candle Making","Tennis Playing","Running Marathons","Crafting Models","Street Photography","Collecting Coins","Planning Events","Crossword Puzzles","Hosting Parties","Learning Calligraphy","Building Lego Models","Indoor Gardening","Shirt","Pants","Dress","Sweater","Jacket","Jeans","Shorts","Skirt","T-shirt","Shoes","Boots","Sneakers","Hat","Scarf","Gloves","Socks","Belt","Sweatshirt","Suit","Tie","Blouse","Cardigan","Tank Top","Pajamas","Leggings","Overalls","Raincoat","Flip-flops","Loafers","Sandals","Tracksuit","Hoodie","Doctor","Engineer","Teacher","Nurse","Lawyer","Chef","Artist","Musician","Actor","Scientist","Writer","Journalist","Photographer","Firefighter","Police Officer","Veterinarian","Architect","Designer","Therapist","Data Analyst","Biologist","Psychologist","Dentist","Pharmacist","Software Developer","Electrician","Carpenter","Mechanic","Farmer","Accountant","Social Worker","Event Planner"],"Mysteries & Beliefs":["Black Cat","Breaking a Mirror","Walking Under a Ladder","Lucky Horseshoe","Four-Leaf Clover","Rabbit's Foot","Salt Over Shoulder","Friday the 13th","Knocking on Wood","Crossing Fingers","Spilling Salt","Wishbone","Whistling Indoors","Bird Poop","First Footing","Opening Umbrella Indoors","Stepping on a Crack","Throwing Rice at Weddings","Seeing a Single Magpie","Finding a Spider","Wearing Red on New Year's Day","Seeing a Falling Star","Throwing a Coin in a Fountain","Hanging a Dreamcatcher","The Number 666","Seeing a Rainbow","Wishing Upon a Star","The Evil Eye","Doppelgänger","Picking up a Penny","Black-Eyed Children","A Full Moon","A White Dove","The Hand of Fatima","Reading Tea Leaves","Candles Flickering","Opening a Window at Midnight","A Dog Howling at Midnight","Dreaming of Teeth Falling Out","The Number 13","Itchy Palms","Walking Over a Grave","Sneezing Three Times in a Row","Dreaming of Fish","Seeing an Owl During the Day","Wearing Blue for Good Luck"],"Expression & Sayings":["A piece of cake","Bite the bullet","Hit the nail on the head","Burn the midnight oil","Under the weather","Break the ice","A penny for your thoughts","Spill the beans","Kick the bucket","At the drop of a hat","A watched pot never boils","Bite off more than you can chew","Don't cry over spilled milk","Cut to the chase","In the blink of an eye","Burn bridges","Through thick and thin","Out of the blue","The ball is in your court","Throw in the towel","Hit the sack","The best of both worlds","Call it a day","The elephant in the room","Jump on the bandwagon","Let the cat out of the bag","A blessing in disguise","In hot water","A stitch in time saves nine","Caught between a rock and a hard place","You can't have your cake and eat it too","By the book","Don't count your chickens before they hatch","Put all your eggs in one basket","Actions speak louder than words","A bird in the hand is worth two in the bush","Rome wasn't built in a day","The early bird catches the worm","Let sleeping dogs lie","When pigs fly","Every cloud has a silver lining","Out of sight, out of mind","An arm and a leg","Give someone the cold shoulder","The straw that broke the camel's back","Jump the gun","Take it with a grain of salt","A leopard can't change its spots","Take the bull by the horns","The pot calling the kettle black","Back to square one","Throw someone under the bus","On thin ice","Hit the ground running","A picture is worth a thousand words","You can't judge a book by its cover","The proof is in the pudding","You reap what you sow","No pain, no gain","Too many cooks spoil the broth","Get a taste of your own medicine","It takes two to tango","The squeaky wheel gets the grease"],"Miscellaneous":["Red","Blue","Green","Yellow","Orange","Purple","Pink","Brown","Black","White","Gray","Gold","Silver","Cyan","Magenta","Burgundy","Lavender","Teal","Peach","Maroon","Circle","Square","Triangle","Rectangle","Pentagon","Hexagon","Octagon","Rhombus","Trapezoid","Ellipse","Oval","Cube","Cylinder","Sphere","Cone","Pyramid","Star","Crescent","Arrow","Diamond"]};
+
+// ── State ──────────────────────────────────────────────────────────────────────
+const g = {
+  teamA: 'Team A',
+  teamB: 'Team B',
+  scoreA: 0,
+  scoreB: 0,
+  pointsToWin: 5,
+  catMode: 'all',
+  selCats: Object.keys(WORDS),
+  pool: [],
+  word: null,
+  timerID: null,
+  timerDur: 0,
+  timerLeft: 0,
+};
+
+// ── Screen navigation ─────────────────────────────────────────────────────────
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  // Scroll to top on navigation
+  window.scrollTo(0, 0);
+}
+
+// ── Setup ──────────────────────────────────────────────────────────────────────
+function adjustPoints(d) {
+  g.pointsToWin = Math.min(12, Math.max(1, g.pointsToWin + d));
+  document.getElementById('pts-display').textContent = g.pointsToWin;
+}
+
+function setCatMode(m) {
+  g.catMode = m;
+  document.getElementById('cat-all-opt').classList.toggle('on', m === 'all');
+  document.getElementById('cat-pick-opt').classList.toggle('on', m === 'pick');
+}
+
+function startGame() {
+  g.teamA  = document.getElementById('teamA-input').value.trim() || 'Team A';
+  g.teamB  = document.getElementById('teamB-input').value.trim() || 'Team B';
+  g.scoreA = 0;
+  g.scoreB = 0;
+
+  if (g.catMode === 'pick') {
+    buildCatGrid();
+    showScreen('categories');
+  } else {
+    g.selCats = Object.keys(WORDS);
+    buildPool();
+    startRound();
+  }
+}
+
+// ── Categories ────────────────────────────────────────────────────────────────
+function buildCatGrid() {
+  const grid = document.getElementById('cat-grid');
+  grid.innerHTML = '';
+  Object.keys(WORDS).forEach(cat => {
+    const el = document.createElement('div');
+    el.className = 'cat-toggle' + (g.selCats.includes(cat) ? ' on' : '');
+    el.textContent = cat;
+    el.addEventListener('click', () => {
+      const i = g.selCats.indexOf(cat);
+      if (i >= 0) {
+        if (g.selCats.length > 1) { g.selCats.splice(i, 1); el.classList.remove('on'); }
+      } else {
+        g.selCats.push(cat); el.classList.add('on');
+      }
+    });
+    grid.appendChild(el);
+  });
+}
+
+function toggleAll() {
+  const all = Object.keys(WORDS);
+  const allOn = all.every(c => g.selCats.includes(c));
+  g.selCats = allOn ? [all[0]] : [...all];
+  buildCatGrid();
+}
+
+function confirmCats() {
+  if (!g.selCats.length) return;
+  buildPool();
+  startRound();
+}
+
+// ── Word pool ─────────────────────────────────────────────────────────────────
+function buildPool() {
+  g.pool = g.selCats.flatMap(c => WORDS[c] || []);
+}
+
+function pickWord() {
+  return g.pool[Math.floor(Math.random() * g.pool.length)];
+}
+
+function changeWord() {
+  g.word = pickWord();
+  document.getElementById('current-word').textContent = g.word;
+}
+
+// ── Round & timer ─────────────────────────────────────────────────────────────
+function startRound() {
+  changeWord();
+  g.timerDur  = 5 + Math.random() * 3;   // 5 – 8 seconds (secret!)
+  g.timerLeft = g.timerDur;
+  showScreen('game-round');
+  runTimer();
+  requestWakeLock();
+}
+
+function runTimer() {
+  clearInterval(g.timerID);
+  g.timerID = setInterval(() => {
+    g.timerLeft -= 0.1;
+    if (g.timerLeft <= 0) {
+      clearInterval(g.timerID);
+      onTimesUp();
+    }
+  }, 100);
+}
+
+function pauseGame() {
+  clearInterval(g.timerID);
+  document.getElementById('pause-overlay').classList.add('active');
+}
+
+function resumeGame() {
+  document.getElementById('pause-overlay').classList.remove('active');
+  runTimer();
+}
+
+function goHome() {
+  clearInterval(g.timerID);
+  document.getElementById('pause-overlay').classList.remove('active');
+  showScreen('home');
+}
+
+function onTimesUp() {
+  if (navigator.vibrate) navigator.vibrate([300, 100, 300]);
+  showScreen('times-up');
+  setTimeout(showRoundResult, 1000);
+}
+
+// ── Round result ──────────────────────────────────────────────────────────────
+function showRoundResult() {
+  document.getElementById('last-word-display').textContent = g.word || '—';
+  document.getElementById('res-nameA').textContent = g.teamA;
+  document.getElementById('res-nameB').textContent = g.teamB;
+  document.getElementById('first-to-label').textContent = 'First to ' + g.pointsToWin + ' wins';
+  refreshScores();
+  showScreen('round-result');
+}
+
+function refreshScores() {
+  document.getElementById('res-scoreA').textContent = g.scoreA;
+  document.getElementById('res-scoreB').textContent = g.scoreB;
+}
+
+function adjustScore(team, d) {
+  if (team === 'A') g.scoreA = Math.max(0, Math.min(g.pointsToWin, g.scoreA + d));
+  else              g.scoreB = Math.max(0, Math.min(g.pointsToWin, g.scoreB + d));
+  refreshScores();
+}
+
+function nextRound() {
+  if (g.scoreA >= g.pointsToWin) return showWinner(g.teamA);
+  if (g.scoreB >= g.pointsToWin) return showWinner(g.teamB);
+  startRound();
+}
+
+// ── Winner ────────────────────────────────────────────────────────────────────
+function showWinner(name) {
+  document.getElementById('winner-display').textContent = name;
+  showScreen('game-finalized');
+  if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
+}
+
+function playAgain() {
+  g.scoreA = 0;
+  g.scoreB = 0;
+  startRound();
+}
+
+// ── Screen wake lock (prevents phone sleeping mid-game) ───────────────────────
+let wakeLock = null;
+async function requestWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  try {
+    if (wakeLock) return;
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release', () => { wakeLock = null; });
+  } catch (_) {}
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') requestWakeLock();
+});
+</script>
+</body>
+</html>
