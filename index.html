@@ -1180,10 +1180,24 @@ let _tickTO    = null;
 let _tickT0    = 0;   // timestamp when current session started
 let _tickAcc   = 0;   // accumulated elapsed ms from previous sessions
 let _tickMax   = 0;   // fake total duration for this round (ms)
+let _pace      = { cur: 1, target: 1, until: 0 };  // Frenzy: interval multiplier (<1 = faster)
+
+// Frenzy only: the ticking randomly bursts fast, then drifts slow, then fast again
+function _frenzyPace() {
+  const now = Date.now();
+  if (now >= _pace.until) {
+    const fast = _pace.target >= 1 || Math.random() < 0.3;   // mostly alternate, sometimes repeat
+    _pace.target = fast ? 0.12 + Math.random() * 0.2 : 1.3 + Math.random() * 0.9;
+    _pace.until  = now + (fast ? 1500 + Math.random() * 3000 : 2000 + Math.random() * 4000);
+  }
+  _pace.cur += (_pace.target - _pace.cur) * 0.35;           // ease toward target
+  return _pace.cur;
+}
 
 function startTicking() {
   stopTicking();
   _tickAcc  = 0;
+  _pace     = { cur: 1, target: 1, until: 0 };
   _tickMax  = 22000 + Math.random() * 38000;  // 22–60 s fake duration (sometimes fast phase kicks in early)
   _tickT0   = Date.now();
   _scheduleTick();
@@ -1209,7 +1223,8 @@ function _scheduleTick() {
   // Interval shrinks from ~950 ms down to ~60 ms
   const base     = 60 + (1 - curve) * 890;
   // ±25% jitter so ticks never feel perfectly metronomic
-  const interval = Math.max(60, base * (0.75 + Math.random() * 0.5));
+  let interval   = Math.max(60, base * (0.75 + Math.random() * 0.5));
+  if (g.frenzy) interval *= _frenzyPace();
 
   _tickTO = setTimeout(() => {
     playTick(0.25 + progress * 0.65);
