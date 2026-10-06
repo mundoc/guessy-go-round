@@ -293,7 +293,7 @@
       pointer-events: none;
     }
 
-    /* ── HOT POTATO WORD TIMER ───────────────────────────────── */
+    /* ── SPEED ROUND WORD TIMER ───────────────────────────────── */
     #word-timer {
       display: none;
       position: absolute;
@@ -754,13 +754,13 @@ const WORDS_DE = {"Unterhaltung":[...WORDS_EN["Entertainment"]],"Popkultur":[...
 
 // ── State ──────────────────────────────────────────────────────────────────────
 const FRENZY_CARDS = [
-  { id: 'normal',    label: 'Normal Round',    desc: 'Play as usual — no special rules!',                    emoji: '🎮', weight: 25 },
-  { id: 'sounds',    label: 'Sounds Only',     desc: 'No words at all — only sounds and noises!',            emoji: '🔊', weight: 16 },
-  { id: 'gestures',  label: 'Gestures Only',   desc: 'No words — only body language and gestures!',          emoji: '🙌', weight: 16 },
+  { id: 'normal',    label: 'Normal Round',    desc: 'Play as usual — no special rules!',                    emoji: '🎮', weight: 16 },
+  { id: 'sounds',    label: 'Sounds Only',     desc: 'No words at all — only sounds and noises!',            emoji: '🔊', weight: 14 },
+  { id: 'gestures',  label: 'Gestures Only',   desc: 'No words — only body language and gestures!',          emoji: '🙌', weight: 14 },
   { id: 'questions', label: 'Questions Only',  desc: 'You can only describe using questions!',               emoji: '❓', weight: 14 },
   { id: 'oneword',   label: 'One Word Only',   desc: 'Pick one word and repeat it as many times as you like.', emoji: '💬', weight: 14 },
-  { id: 'hotpotato', label: 'Hot Potato',      desc: 'Only 10 seconds per word! Too slow and it skips to the next one.', emoji: '🥔', weight: 16 },
-  { id: 'double',    label: 'Double Points!',  desc: 'Every point scored this round counts as 2!',           emoji: '⚡', weight: 15 },
+  { id: 'speedround', label: 'Speed Round',   desc: 'Only 10 seconds per word! Too slow and it skips to the next one.', emoji: '🥔', weight: 14 },
+  { id: 'double',    label: 'Double Points!',  desc: 'Every point scored this round counts as 2!',           emoji: '⚡', weight: 14 },
 ];
 
 const g = {
@@ -942,15 +942,15 @@ function pickWord() {
   return word;
 }
 
-const WORD_TIME = 10;  // Hot Potato: seconds allowed per word
+const WORD_TIME = 10;  // Speed Round: seconds allowed per word
 
-function hotPotatoOn() {
-  return g.frenzy && g.frenzyCard && g.frenzyCard.id === 'hotpotato';
+function speedRoundOn() {
+  return g.frenzy && g.frenzyCard && g.frenzyCard.id === 'speedround';
 }
 
 function resetWordTimer() {
   g.wordLeft = WORD_TIME;
-  document.getElementById('word-timer').classList.toggle('active', hotPotatoOn());
+  document.getElementById('word-timer').classList.toggle('active', speedRoundOn());
   updateWordTimer();
 }
 
@@ -999,7 +999,7 @@ function runTimer() {
   clearInterval(g.timerID);
   g.timerID = setInterval(() => {
     g.timerLeft -= 0.1;
-    if (hotPotatoOn() && g.timerLeft > 0) {
+    if (speedRoundOn() && g.timerLeft > 0) {
       g.wordLeft -= 0.1;
       if (g.wordLeft <= 0) wordTimedOut(); else updateWordTimer();
     }
