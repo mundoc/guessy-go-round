@@ -3,6 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Guessy-Go-Round">
+  <meta name="theme-color" content="#0e0e1a">
   <title>Guessy-Go-Round</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
@@ -530,6 +535,10 @@
   <div class="home-sub">The phone-passing word guessing game</div>
   <button class="btn btn-primary" onclick="showScreen('setup')">Setup Game</button>
   <button class="btn btn-ghost"   onclick="showScreen('instructions')">How to Play</button>
+  <button class="btn btn-ghost" id="fullscreen-btn" onclick="toggleFullscreen()" style="display:none">⛶ Full Screen</button>
+  <div class="home-sub" id="fullscreen-hint" style="display:none;font-size:0.8rem;max-width:300px">
+    For full screen on iPhone: tap Share → Add to Home Screen, then open the game from there.
+  </div>
 </div>
 
 <!-- SETUP -->
@@ -994,6 +1003,34 @@ function playAgain() {
   g.scoreB = 0;
   beforeRound();
 }
+
+// ── Full screen ───────────────────────────────────────────────────────────────
+function fsElement() { return document.fullscreenElement || document.webkitFullscreenElement; }
+
+function toggleFullscreen() {
+  const el = document.documentElement;
+  if (fsElement()) {
+    (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  } else {
+    const req = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (req) { const p = req.call(el); if (p && p.catch) p.catch(() => {}); }
+  }
+}
+
+function updateFullscreenUI() {
+  document.getElementById('fullscreen-btn').textContent = fsElement() ? '✕ Exit Full Screen' : '⛶ Full Screen';
+}
+
+(() => {
+  const el = document.documentElement;
+  const canFs = !!(el.requestFullscreen || el.webkitRequestFullscreen);
+  const standalone = window.navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+  if (standalone) return;  // already launched full screen from the home screen
+  if (canFs) document.getElementById('fullscreen-btn').style.display = '';
+  else       document.getElementById('fullscreen-hint').style.display = '';
+  document.addEventListener('fullscreenchange', updateFullscreenUI);
+  document.addEventListener('webkitfullscreenchange', updateFullscreenUI);
+})();
 
 // ── Orientation lock ──────────────────────────────────────────────────────────
 (async () => {
