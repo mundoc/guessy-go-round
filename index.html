@@ -842,7 +842,7 @@ function beforeRound() {
     g.forbiddenLetter = null;
     if (card.id === 'forbidden') {
       g.forbiddenLetter = FORBIDDEN_LETTERS[Math.floor(Math.random() * FORBIDDEN_LETTERS.length)];
-      desc = 'You can\'t say any word containing the letter "' + g.forbiddenLetter + '"!';
+      desc = 'The letter "' + g.forbiddenLetter + '" is banned for the whole round — no word you say can contain it!';
     }
     document.getElementById('frenzy-emoji').textContent = card.emoji;
     document.getElementById('frenzy-label').textContent = card.label + (g.forbiddenLetter ? ': ' + g.forbiddenLetter : '');
