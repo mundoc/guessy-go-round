@@ -293,6 +293,54 @@
       pointer-events: none;
     }
 
+    /* ── HOT POTATO WORD TIMER ───────────────────────────────── */
+    #word-timer {
+      display: none;
+      position: absolute;
+      top: 34px;
+      left: 24px; right: 24px;
+      align-items: center;
+      gap: 10px;
+      pointer-events: none;
+    }
+    #word-timer.active { display: flex; }
+    .word-timer-track {
+      flex: 1;
+      height: 10px;
+      border-radius: 5px;
+      background: rgba(255,255,255,0.12);
+      overflow: hidden;
+    }
+    #word-timer-fill {
+      height: 100%;
+      width: 100%;
+      background: var(--orange);
+      border-radius: 5px;
+    }
+    #word-timer-num {
+      min-width: 2ch;
+      text-align: right;
+      font-size: 1.1rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      color: var(--orange);
+    }
+    #word-timer.low #word-timer-fill { background: #ff3b30; }
+    #word-timer.low #word-timer-num  { color: #ff3b30; }
+    #word-skip-flash {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      background: #ff3b30;
+      color: #fff;
+      padding: 16px 20px;
+      text-align: center;
+      z-index: 300;
+      font-size: 1rem;
+      font-weight: 800;
+    }
+    #word-skip-flash.active { display: block; }
+
     /* ── DOUBLE POINTS BANNER ────────────────────────────────── */
     .double-banner {
       background: rgba(247,127,0,0.12);
@@ -632,9 +680,15 @@
 <!-- CHALLENGE FLASH -->
 <div id="challenge-flash">🎯 CHALLENGE — Guess 2 words before passing!</div>
 
+<div id="word-skip-flash">⏱️ Time's up on this word — next one!</div>
+
 <!-- GAME ROUND -->
 <div id="screen-game-round" class="screen">
   <div class="frenzy-rule-badge" id="frenzy-rule-badge"></div>
+  <div id="word-timer">
+    <div class="word-timer-track"><div id="word-timer-fill"></div></div>
+    <div id="word-timer-num">10</div>
+  </div>
   <div class="word-area">
     <div class="word-text" id="current-word">—</div>
   </div>
@@ -705,6 +759,7 @@ const FRENZY_CARDS = [
   { id: 'gestures',  label: 'Gestures Only',   desc: 'No words — only body language and gestures!',          emoji: '🙌', weight: 16 },
   { id: 'questions', label: 'Questions Only',  desc: 'You can only describe using questions!',               emoji: '❓', weight: 14 },
   { id: 'oneword',   label: 'One Word Only',   desc: 'Pick one word and repeat it as many times as you like.', emoji: '💬', weight: 14 },
+  { id: 'hotpotato', label: 'Hot Potato',      desc: 'Only 10 seconds per word! Too slow and it skips to the next one.', emoji: '🥔', weight: 16 },
   { id: 'double',    label: 'Double Points!',  desc: 'Every point scored this round counts as 2!',           emoji: '⚡', weight: 15 },
 ];
 
@@ -887,9 +942,37 @@ function pickWord() {
   return word;
 }
 
+const WORD_TIME = 10;  // Hot Potato: seconds allowed per word
+
+function hotPotatoOn() {
+  return g.frenzy && g.frenzyCard && g.frenzyCard.id === 'hotpotato';
+}
+
+function resetWordTimer() {
+  g.wordLeft = WORD_TIME;
+  document.getElementById('word-timer').classList.toggle('active', hotPotatoOn());
+  updateWordTimer();
+}
+
+function updateWordTimer() {
+  const left = Math.max(0, g.wordLeft);
+  document.getElementById('word-timer-fill').style.width = (left / WORD_TIME * 100) + '%';
+  document.getElementById('word-timer-num').textContent = Math.ceil(left);
+  document.getElementById('word-timer').classList.toggle('low', left <= 3);
+}
+
+function wordTimedOut() {
+  if (navigator.vibrate) navigator.vibrate(150);
+  const el = document.getElementById('word-skip-flash');
+  el.classList.add('active');
+  setTimeout(() => el.classList.remove('active'), 1200);
+  changeWord();
+}
+
 function changeWord() {
   g.word = pickWord();
   document.getElementById('current-word').textContent = g.word;
+  resetWordTimer();
   if (g.frenzy && !g.challengeFired && Math.random() < 0.08) {
     g.challengeFired = true;
     showChallengeFlash();
@@ -916,6 +999,10 @@ function runTimer() {
   clearInterval(g.timerID);
   g.timerID = setInterval(() => {
     g.timerLeft -= 0.1;
+    if (hotPotatoOn() && g.timerLeft > 0) {
+      g.wordLeft -= 0.1;
+      if (g.wordLeft <= 0) wordTimedOut(); else updateWordTimer();
+    }
     if (g.timerLeft <= 0) {
       clearInterval(g.timerID);
       onTimesUp();
