@@ -268,6 +268,18 @@
       line-height: 1.5;
     }
 
+    .frenzy-card-example {
+      display: none;
+      max-width: 340px;
+      padding: 10px 14px;
+      border-left: 3px solid var(--orange);
+      background: rgba(247,127,0,0.1);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
     /* ── CHALLENGE FLASH ─────────────────────────────────────── */
     #challenge-flash {
       display: none;
@@ -686,6 +698,7 @@
   <div class="frenzy-card-emoji" id="frenzy-emoji">🎮</div>
   <div class="frenzy-card-label" id="frenzy-label">Normal Round</div>
   <div class="frenzy-card-desc"  id="frenzy-desc">Play as usual!</div>
+  <div class="frenzy-card-example" id="frenzy-example"></div>
   <button class="btn btn-primary" onclick="startRound()" style="margin-top:16px; max-width:280px;">Got it! →</button>
 </div>
 
@@ -772,7 +785,7 @@ const FRENZY_CARDS = [
   { id: 'questions', label: 'Questions Only',  desc: 'You can only describe using questions!',               emoji: '❓', weight: 11 },
   { id: 'oneword',   label: 'One Word Only',   desc: 'Pick one word and repeat it as many times as you like.', emoji: '💬', weight: 11 },
   { id: 'speedround', label: 'Speed Round',  desc: 'Only 10 seconds per word! Too slow and it skips to the next one.', emoji: '⏱️', weight: 11 },
-  { id: 'opposites', label: 'Opposites',      desc: "Describe it only by what it is NOT — say the opposite!", emoji: '🔄', weight: 11 },
+  { id: 'opposites', label: 'Opposites',      desc: "Describe it only by what it is NOT — say the opposite!", example: 'For "Winter" you could say: <em>"It\'s not summer… it\'s not hot… you\'re not wearing shorts!"</em>', emoji: '🔄', weight: 11 },
   { id: 'forbidden', label: 'Forbidden Letter', desc: "One letter is banned — don't use it in any word you say!", emoji: '🚫', weight: 11 },
   { id: 'double',    label: 'Double Points!',  desc: 'Every point scored this round counts as 2!',           emoji: '⚡', weight: 11 },
 ];
@@ -847,6 +860,9 @@ function beforeRound() {
     document.getElementById('frenzy-emoji').textContent = card.emoji;
     document.getElementById('frenzy-label').textContent = card.label + (g.forbiddenLetter ? ': ' + g.forbiddenLetter : '');
     document.getElementById('frenzy-desc').textContent  = desc;
+    const ex = document.getElementById('frenzy-example');
+    ex.innerHTML = card.example ? '💡 ' + card.example : '';
+    ex.style.display = card.example ? 'block' : 'none';
     showScreen('frenzy-card');
   } else {
     g.frenzyCard   = null;
