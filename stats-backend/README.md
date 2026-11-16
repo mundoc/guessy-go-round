@@ -24,16 +24,34 @@ data arrives.
 
 ## What's in the sheet
 
+A **user** is a phone: a random id the game keeps on the device. It's not a
+person, because one phone gets passed around a whole group. Clearing the
+browser data makes the phone count as a new user. A **session** is one sitting
+with the app. It continues while words keep being played, and a new one starts
+after 30+ minutes without activity. Opening the app without playing a word
+doesn't count as a session.
+
+- **Summary**: users, sessions, sessions per user, users active in the last
+  7 and 30 days, how many users came back 1, 2, 3–5 or 6+ times, and users,
+  sessions and sessions per user by country.
+- **Words**: per word, sorted by skip rate. A quick skip is a `change` under
+  3 seconds.
+- **Players**: one row per phone, with its country, sessions, words shown,
+  and first and last seen.
 - **Events**: one row per word shown, with the time, language, word,
   normal/frenzy, frenzy card, seconds on screen (paused time excluded), how
-  it ended, whether it was a quick skip, and a random per-phone id.
-  `end` values:
+  it ended, whether it was a quick skip, the phone id, the session id, the
+  country and the time zone. `end` values:
   - `change`: Change Word tapped (guessed or skipped)
   - `timeout`: the Speed Round timer ran out
   - `timesup`: the round ended
   - `quit`: Home was pressed
-- **Summary**: per word, sorted by skip rate. A quick skip is a `change`
-  under 3 seconds.
+
+The country comes from the game's Netlify edge function
+(`netlify/edge-functions/geo.js`), which returns only the 2-letter code Netlify
+derives from the request. IP addresses aren't stored anywhere. When the country
+is unavailable it shows as `?`, and the time zone column usually still gives a
+good idea of where the phone is.
 
 Opening the web app URL in a browser returns the same summary as JSON. That's
 what a future Hard mode will read.

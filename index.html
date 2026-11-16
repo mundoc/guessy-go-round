@@ -1050,7 +1050,7 @@ function wordEnded(end) {
   if (end === 'change' && ms < QUICK_SKIP_MS) s.quickSkips++;
   saveJSON(STATS_KEY, stats);
 
-  const ev = { id: randomId(), t: now, w: word, l: g.lang, mode: g.frenzy ? 'frenzy' : 'normal',
+  const ev = { id: randomId(), s: sessionId(now), t: now, w: word, l: g.lang, mode: g.frenzy ? 'frenzy' : 'normal',
                card: g.frenzyCard ? g.frenzyCard.id : null, ms, end };
   const log = loadJSON(LOG_KEY, []);
   log.push(ev);
@@ -1076,6 +1076,39 @@ function deviceId() {
   return id;
 }
 
+// A session is one sitting with the app: it continues as long as words keep
+// being played, and a new one starts after 30+ minutes with no activity. It's
+// kept in localStorage so iOS reloading the page after a short trip to another
+// app doesn't count as a new session.
+const SESSION_GAP_MS = 30 * 60 * 1000;
+function sessionId(now) {
+  let s = loadJSON('ggr.session', null);
+  if (!s || !s.id || now - s.last > SESSION_GAP_MS) s = { id: randomId(), last: now };
+  s.last = now;
+  saveJSON('ggr.session', s);
+  return s.id;
+}
+
+// Country code from our own Netlify edge function (netlify/edge-functions/geo.js),
+// fetched once per page load. Empty if it's unavailable (e.g. opened as a file).
+let _country = '';
+let _countryP = null;
+function getCountry() {
+  if (!_countryP) {
+    _countryP = fetch('/api/geo', { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : {})
+      .then(d => (_country = (d && /^[A-Z]{2}$/.test(d.country)) ? d.country : ''))
+      .catch(() => '');
+  }
+  return _countryP;
+}
+function timeZone() {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (_) { return ''; }
+}
+function uploadBody(batch) {
+  return JSON.stringify({ device: deviceId(), country: _country, tz: timeZone(), events: batch });
+}
+
 // Upload queued events. Sent as text/plain so the browser skips the CORS
 // preflight, which Apps Script can't answer. Events leave the queue only once
 // the sheet confirms; the sheet ignores ids it has already stored, so a retry
@@ -1087,7 +1120,8 @@ async function flushStats() {
   if (!batch.length) return;
   _flushing = true;
   try {
-    const res  = await fetch(STATS_URL, { method: 'POST', body: JSON.stringify({ device: deviceId(), events: batch }) });
+    await Promise.race([getCountry(), new Promise(r => setTimeout(r, 3000))]);
+    const res  = await fetch(STATS_URL, { method: 'POST', body: uploadBody(batch) });
     const data = await res.json();
     if (data && data.ok) {
       const sent = new Set(batch.map(e => e.id));
@@ -1108,7 +1142,7 @@ function beaconStats() {
   const batch = loadJSON(QUEUE_KEY, []).slice(0, 500);
   if (!batch.length) return;
   try {
-    navigator.sendBeacon(STATS_URL, new Blob([JSON.stringify({ device: deviceId(), events: batch })], { type: 'text/plain' }));
+    navigator.sendBeacon(STATS_URL, new Blob([uploadBody(batch)], { type: 'text/plain' }));
   } catch (_) {}
 }
 
@@ -1116,7 +1150,7 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') beaconStats(); else flushStats();
 });
 window.addEventListener('online', flushStats);
-window.addEventListener('load', flushStats);
+window.addEventListener('load', () => { getCountry(); flushStats(); });
 
 // Console helper: words sorted by quick-skip rate (most skipped first).
 window.wordStatsReport = function () {
