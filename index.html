@@ -1181,15 +1181,23 @@ function changeWord(end = 'change') {
   document.getElementById('current-word').textContent = g.word;
   fitWord();
   resetWordTimer();
-  if (g.frenzy && !g.challengeFired && Math.random() < 0.08) {
+  g.wordsThisRound = (g.wordsThisRound || 0) + 1;
+  if (g.challengeAt && !g.challengeFired && g.wordsThisRound === g.challengeAt) {
     g.challengeFired = true;
     showChallengeFlash();
   }
 }
 
 // ── Round & timer ─────────────────────────────────────────────────────────────
+// The "guess 2 words before passing" challenge is rolled once per Frenzy round
+// (it used to be an 8% chance on every word, so it showed up most rounds).
+// When it hits, it fires on a random word between the 2nd and 6th.
+const CHALLENGE_ROUND_CHANCE = 0.15;
+
 function startRound() {
   g.challengeFired = false;
+  g.wordsThisRound = 0;
+  g.challengeAt = (g.frenzy && Math.random() < CHALLENGE_ROUND_CHANCE) ? 2 + Math.floor(Math.random() * 5) : 0;
   g.paused = false;
   _cur = null;  // a fresh round — nothing from before is still on screen
   changeWord();
