@@ -1008,7 +1008,7 @@ function pickWord() {
 // an Apps Script web app (see stats-backend/README.md) so stats from every
 // phone end up in one place. Uploads happen at the end of each round and when
 // the app is backgrounded; anything that fails stays queued and is retried.
-const STATS_URL = '';  // Apps Script web app URL (…/exec); empty = keep queueing locally
+const STATS_URL = 'https://script.google.com/macros/s/AKfycbxWDOSz_aK_p_q6XpZa0XCi7ENBQgNGCFhpNANlySGC48t_Zero767JXbjwNmEgKC5V/exec';  // Apps Script web app (stats-backend/); '' = queue locally only
 const STATS_KEY = 'ggr.wordStats.v1';
 const LOG_KEY   = 'ggr.wordLog.v1';
 const QUEUE_KEY = 'ggr.wordQueue.v1';
