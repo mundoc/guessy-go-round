@@ -533,6 +533,267 @@
       margin-bottom: 8px;
     }
 
+    /* ── POPULAR OPINION (survey game) ───────────────────────── */
+    .home-mini {
+      background: none;
+      border: 1.5px solid var(--border);
+      color: var(--dim);
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      background: var(--card);
+      /* pinned to the corner so it's visible without scrolling in landscape */
+      position: fixed;
+      right: max(16px, env(safe-area-inset-right));
+      bottom: max(14px, env(safe-area-inset-bottom));
+      z-index: 5;
+    }
+    .home-mini .new-tag {
+      background: var(--orange);
+      color: #000;
+      font-size: 0.62rem;
+      font-weight: 900;
+      padding: 2px 6px;
+      border-radius: 6px;
+      margin-left: 6px;
+      vertical-align: 1px;
+    }
+    #screen-po-win {
+      justify-content: center;
+      gap: 14px;
+      background: radial-gradient(ellipse at 50% 40%, #1e1040 0%, #0e0e1a 70%);
+    }
+    #screen-po-round, #screen-po-fast {
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      padding: 10px 14px 14px;
+      gap: 8px;
+      justify-content: flex-start;
+    }
+    .po-top { display: flex; align-items: center; gap: 10px; width: 100%; flex-shrink: 0; }
+    .po-team {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 6px 12px;
+      transition: border-color 0.2s;
+    }
+    .po-team.on { border-color: var(--green); }
+    .po-team .nm {
+      flex: 1;
+      min-width: 0;
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--dim);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .po-team.on .nm { color: var(--text); }
+    .po-team .sc { font-size: 1.35rem; font-weight: 900; font-variant-numeric: tabular-nums; }
+    .po-mid { flex-shrink: 0; text-align: center; min-width: 90px; }
+    .po-rd {
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--orange);
+    }
+    .po-bank { font-size: 1.35rem; font-weight: 900; line-height: 1.1; font-variant-numeric: tabular-nums; }
+    .po-bank small { font-size: 0.6rem; color: var(--dim); font-weight: 700; letter-spacing: 1px; margin-left: 3px; }
+    .po-exit {
+      flex-shrink: 0;
+      background: none;
+      border: 1.5px solid var(--border);
+      color: var(--dim);
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .po-q { width: 100%; text-align: center; flex-shrink: 0; }
+    .po-grp {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .po-txt { font-size: 1.12rem; font-weight: 800; line-height: 1.25; }
+    .po-status {
+      flex-shrink: 0;
+      width: 100%;
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--dim);
+      min-height: 1.2em;
+    }
+    .po-status b { color: var(--text); }
+    .po-strikes { color: #ff3b30; font-weight: 900; letter-spacing: 3px; margin-left: 6px; }
+    .po-board {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-auto-flow: column;
+      gap: 7px;
+    }
+    .po-tile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 0;
+      padding: 0 12px;
+      border-radius: 10px;
+      border: 2px dashed var(--border);
+      background: #16162a;
+      color: var(--dim);
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-align: left;
+      cursor: pointer;
+      overflow: hidden;
+    }
+    .po-tile .n {
+      width: 24px; height: 24px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      background: var(--border);
+      color: var(--text);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.78rem; font-weight: 900;
+    }
+    .po-tile .a { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .po-tile .p { font-weight: 900; font-variant-numeric: tabular-nums; }
+    .po-tile.open {
+      border: 2px solid transparent;
+      background: linear-gradient(135deg, #f77f00, #e94560);
+      color: #fff;
+    }
+    .po-tile.open .n { background: rgba(0,0,0,0.25); }
+    .po-tile.late { border: 2px solid var(--border); background: var(--card); color: var(--text); }
+    .po-tile.flip { animation: po-flip 0.35s ease; }
+    @keyframes po-flip { from { transform: rotateX(90deg); } to { transform: none; } }
+    .po-bar { display: flex; gap: 8px; width: 100%; flex-shrink: 0; }
+    .po-bar button {
+      flex: 1;
+      min-width: 0;
+      padding: 12px 10px;
+      border: none;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 800;
+      cursor: pointer;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .po-bar button:active { transform: scale(0.97); }
+    .po-bar .x     { background: #ff3b30; color: #fff; }
+    .po-bar .team  { background: var(--blue); color: #fff; }
+    .po-bar .go    { background: var(--green); color: #000; }
+    .po-bar .ghost { flex: 0 0 auto; background: transparent; border: 2px solid var(--border); color: var(--dim); }
+    .po-bar .ghost:disabled { opacity: 0.35; }
+    #po-xflash {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 400;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      background: rgba(0,0,0,0.35);
+      pointer-events: none;
+    }
+    #po-xflash.on { display: flex; }
+    #po-xflash span {
+      font-size: 9rem;
+      font-weight: 900;
+      color: #ff3b30;
+      text-shadow: 0 0 30px rgba(255,59,48,0.7);
+      animation: po-x 0.4s ease;
+    }
+    @keyframes po-x { from { transform: scale(2.2); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+    /* Final Rush */
+    .po-panel { display: none; flex-direction: column; align-items: center; gap: 8px; width: 100%; height: 100%; min-height: 0; }
+    .po-panel.on { display: flex; }
+    .po-panel.center { justify-content: center; gap: 14px; }
+    .po-rush-head { display: flex; align-items: center; gap: 12px; width: 100%; flex-shrink: 0; }
+    .po-rush-head .grow { flex: 1; min-width: 0; text-align: left; }
+    .po-clock {
+      font-size: 2.2rem;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      color: var(--orange);
+      min-width: 2.5ch;
+      text-align: right;
+      line-height: 1;
+    }
+    .po-clock.low { color: #ff3b30; }
+    .po-rush-answers {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-auto-rows: 1fr;
+      gap: 7px;
+    }
+    .po-rush-answers button {
+      position: relative;
+      border: 2px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      padding: 4px 8px;
+      cursor: pointer;
+      overflow: hidden;
+    }
+    .po-rush-answers button:active { background: var(--border); }
+    .po-rush-answers .p1 {
+      position: absolute;
+      top: 3px; right: 4px;
+      font-size: 0.6rem;
+      font-weight: 900;
+      background: var(--orange);
+      color: #000;
+      padding: 1px 5px;
+      border-radius: 5px;
+    }
+    .po-rev-list { flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; gap: 6px; }
+    .po-rev-row {
+      flex: 1;
+      max-height: 44px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 56px;
+      align-items: center;
+      gap: 10px;
+      padding: 0 12px;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.9rem;
+    }
+    .po-rev-row .rq { color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .po-rev-row .ra { font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .po-rev-row .rp { font-weight: 900; text-align: right; font-variant-numeric: tabular-nums; }
+    .po-rev-row.hit  { border-color: var(--green); }
+    .po-rev-row.miss { border-color: #ff3b30; }
+    .po-big { font-size: clamp(2.6rem, 12vw, 4.5rem); font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+
     /* ── PAUSE OVERLAY ───────────────────────────────────────── */
     #pause-overlay {
       display: none;
@@ -603,6 +864,7 @@
   <div class="home-sub" id="fullscreen-hint" style="display:none;font-size:0.8rem;max-width:300px">
     For full screen on iPhone: tap Share → Add to Home Screen, then open the game from there.
   </div>
+  <button class="home-mini" onclick="showScreen('po-setup')">🗳️ Popular Opinion<span class="new-tag">NEW</span></button>
 </div>
 
 <!-- SETUP -->
@@ -764,6 +1026,123 @@
   <button class="btn btn-primary" onclick="playAgain()" style="max-width:340px;width:100%;">Play Again</button>
   <button class="btn btn-ghost"   onclick="showScreen('home')" style="max-width:340px;width:100%;">Go to Start</button>
 </div>
+
+<!-- ═══ POPULAR OPINION (survey game) ═══════════════════════════════════════ -->
+<div id="screen-po-setup" class="screen">
+  <div class="screen-title">🗳️ Popular Opinion</div>
+  <div class="home-sub" style="margin:-8px 0 4px">Guess what 100 people said. One host, two teams.</div>
+  <div class="form-group">
+    <div class="form-label">Team 1 Name</div>
+    <input class="form-input" type="text" id="po-teamA" placeholder="Team A" maxlength="20">
+  </div>
+  <div class="form-group">
+    <div class="form-label">Team 2 Name</div>
+    <input class="form-input" type="text" id="po-teamB" placeholder="Team B" maxlength="20">
+  </div>
+  <div class="form-group">
+    <div class="form-label">Questions</div>
+    <div class="toggle-row">
+      <div class="toggle-opt on" id="po-lang-en" onclick="poSetLang('en')">🇬🇧 English</div>
+      <div class="toggle-opt"    id="po-lang-de" onclick="poSetLang('de')">🇩🇪 Deutsch</div>
+    </div>
+  </div>
+  <button class="btn btn-primary" onclick="poStart()" style="margin-top:4px;">Start Game</button>
+  <button class="btn btn-ghost"   onclick="showScreen('po-rules')">How to Play</button>
+  <button class="btn btn-ghost"   onclick="showScreen('home')">Back</button>
+</div>
+
+<div id="screen-po-rules" class="screen">
+  <div class="screen-title">How to Play</div>
+  <div class="instr-card">
+    <h3>Setup</h3>
+    <ol>
+      <li>One person is the <strong>host</strong> and holds the phone. Everyone else splits into two teams.</li>
+      <li>Every question was "asked to 100 people" from a group, like 100 married women or 100 teenagers. The board holds the most popular answers. Only the host sees it.</li>
+      <li>The answers and points are our own best guesses at what 100 people would say, not a real poll.</li>
+    </ol>
+    <h3>Each Round</h3>
+    <ol>
+      <li><strong>Face-off:</strong> one player from each team answers. The host taps the answer they gave, or ✗ if it isn't on the board, then picks which team plays.</li>
+      <li>The playing team takes turns answering. Each right answer adds its points to the bank. Each wrong answer is a <strong>strike</strong>.</li>
+      <li>Find every answer to win the bank. After <strong>3 strikes</strong>, the other team gets one answer to <strong>steal</strong> it all.</li>
+      <li>Round 3 is worth <strong>double</strong> and round 4 <strong>triple</strong>. Made a mistake? Tap ↶ to undo.</li>
+    </ol>
+    <h3>Winning</h3>
+    <ol>
+      <li>First team to <strong>300 points</strong> wins. If nobody has 300 after round 4, play <strong>sudden death</strong>: one answer per team, and the higher answer on the board wins.</li>
+      <li><strong>Final Rush:</strong> the winners pick two players. Player 1 gets 20 seconds for 5 questions. Then player 2 gets 25 seconds for the same questions and can't repeat player 1's answers. Reach <strong>200 points</strong> together to win the Rush. The host taps each answer as it's said.</li>
+    </ol>
+  </div>
+  <button class="btn btn-primary" onclick="showScreen('po-setup')" style="max-width:380px;width:100%;">Got it!</button>
+</div>
+
+<div id="screen-po-round" class="screen">
+  <div class="po-top">
+    <div class="po-team" id="po-team0"><span class="nm" id="po-name0"></span><span class="sc" id="po-score0">0</span></div>
+    <div class="po-mid">
+      <div class="po-rd" id="po-round-label">Round 1</div>
+      <div class="po-bank"><span id="po-bank">0</span><small>BANK</small></div>
+    </div>
+    <div class="po-team" id="po-team1"><span class="sc" id="po-score1">0</span><span class="nm" id="po-name1" style="text-align:right"></span></div>
+    <button class="po-exit" onclick="poQuit()" aria-label="Quit game">✕</button>
+  </div>
+  <div class="po-q">
+    <div class="po-grp" id="po-group"></div>
+    <div class="po-txt" id="po-question"></div>
+  </div>
+  <div class="po-status"><span id="po-status"></span><span class="po-strikes" id="po-strikes"></span></div>
+  <div class="po-board" id="po-board"></div>
+  <div class="po-bar" id="po-bar"></div>
+</div>
+
+<div id="screen-po-win" class="screen">
+  <div class="trophy">🏆</div>
+  <div class="wins-label">WINNER</div>
+  <div class="winner-name" id="po-win-name">Team A</div>
+  <div class="first-to-label" id="po-win-score"></div>
+  <button class="btn btn-primary" onclick="poRushStart()" style="max-width:340px;width:100%;">⚡ Play the Final Rush</button>
+  <button class="btn btn-ghost"   onclick="showScreen('po-setup')" style="max-width:340px;width:100%;">New Game</button>
+  <button class="btn btn-ghost"   onclick="showScreen('home')" style="max-width:340px;width:100%;">Home</button>
+</div>
+
+<div id="screen-po-fast" class="screen">
+  <div class="po-panel center" id="po-rush-intro">
+    <div class="frenzy-tag">⚡ Final Rush</div>
+    <div class="frenzy-card-label" id="po-rush-title"></div>
+    <div class="frenzy-card-desc" id="po-rush-text" style="max-width:560px"></div>
+    <button class="btn btn-primary" onclick="poRushGo()" style="max-width:280px;">▶ Start the clock</button>
+    <button class="btn btn-ghost" onclick="poQuit()" style="max-width:280px;padding:10px;">Quit</button>
+  </div>
+  <div class="po-panel" id="po-rush-run">
+    <div class="po-rush-head">
+      <div class="grow">
+        <div class="po-rd" id="po-rush-qn"></div>
+        <div class="po-grp" id="po-rush-group"></div>
+      </div>
+      <div class="po-clock" id="po-rush-clock">20</div>
+    </div>
+    <div class="po-txt" id="po-rush-q" style="width:100%;text-align:left;flex-shrink:0"></div>
+    <div class="po-rush-answers" id="po-rush-answers"></div>
+    <div class="po-bar" id="po-rush-bar"></div>
+  </div>
+  <div class="po-panel" id="po-rush-reveal">
+    <div class="po-rush-head">
+      <div class="grow"><div class="po-rd" id="po-rev-title"></div><div class="po-grp" id="po-rev-sub"></div></div>
+      <div class="po-clock" id="po-rev-total">0</div>
+    </div>
+    <div class="po-rev-list" id="po-rev-list"></div>
+    <div class="po-bar"><button class="go" id="po-rev-btn" onclick="poRushRevealStep()"></button></div>
+  </div>
+  <div class="po-panel center" id="po-rush-result">
+    <div class="trophy" id="po-res-emoji">🎉</div>
+    <div class="po-big" id="po-res-total">0</div>
+    <div class="frenzy-card-desc" id="po-res-text"></div>
+    <button class="btn btn-primary" onclick="showScreen('po-setup')" style="max-width:300px;">New Game</button>
+    <button class="btn btn-ghost"   onclick="showScreen('home')" style="max-width:300px;">Home</button>
+  </div>
+</div>
+
+<div id="po-xflash"></div>
 
 <!-- PAUSE OVERLAY -->
 <div id="pause-overlay">
@@ -1567,6 +1946,503 @@ async function requestWakeLock() {
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') requestWakeLock();
 });
+
+// ══ POPULAR OPINION (survey game) ═════════════════════════════════════════════
+// One host holds the phone and sees the board: the most popular answers "100
+// people" gave (our own estimates — see POLL_EN / POLL_DE). The host taps what
+// the teams say, adds strikes, and the app keeps the bank and the score.
+// First to PO_TARGET wins; if nobody gets there in PO_ROUNDS rounds, a sudden-
+// death question decides. The winners then play the Final Rush: two players,
+// PO_RUSH_QS quick-fire questions, PO_RUSH_GOAL points to beat.
+const PO_TARGET    = 300;
+const PO_ROUNDS    = 4;
+const PO_MULT      = [1, 1, 2, 3];   // points multiplier for rounds 1..4
+const PO_RUSH_QS   = 5;
+const PO_RUSH_TIME = [20, 25];       // seconds for player 1 and player 2
+const PO_RUSH_GOAL = 200;
+
+const PO = { lang: 'en', teams: ['Team A', 'Team B'], scores: [0, 0], roundNo: 0, R: null, undo: [], inGame: [], rush: null, flip: -1 };
+const poEl = id => document.getElementById(id);
+
+function poSetLang(l) {
+  PO.lang = l;
+  poEl('po-lang-en').classList.toggle('on', l === 'en');
+  poEl('po-lang-de').classList.toggle('on', l === 'de');
+}
+
+function poGroupLine(q) {
+  return PO.lang === 'de' ? 'Wir haben 100 ' + q.g + ' gefragt:' : 'We asked 100 ' + q.g + ':';
+}
+
+// Questions come from a shuffled bag that persists on this phone, so the same
+// question doesn't come back until the others have been played.
+function poPick() {
+  const bank = PO.lang === 'de' ? POLL_DE : POLL_EN;
+  const key  = 'ggr.po.used.' + PO.lang;
+  let used = loadJSON(key, []).filter(i => i < bank.length);
+  let free = bank.map((_, i) => i).filter(i => !used.includes(i) && !PO.inGame.includes(i));
+  if (!free.length) {  // everything played — start over (but not with this game's questions)
+    used = [];
+    free = bank.map((_, i) => i).filter(i => !PO.inGame.includes(i));
+    if (!free.length) free = bank.map((_, i) => i);
+  }
+  const i = free[Math.floor(Math.random() * free.length)];
+  used.push(i);
+  saveJSON(key, used);
+  PO.inGame.push(i);
+  const q = bank[i];
+  return { g: q[0], q: q[1], a: q[2] };
+}
+
+function poStart() {
+  PO.teams  = [poEl('po-teamA').value.trim() || 'Team A', poEl('po-teamB').value.trim() || 'Team B'];
+  PO.scores = [0, 0];
+  PO.roundNo = 0;
+  PO.inGame = [];
+  poStartRound(false);
+}
+
+function poStartRound(sudden) {
+  if (!sudden) PO.roundNo++;
+  const q = poPick();
+  PO.R = {
+    q, sudden,
+    mult: sudden ? 1 : PO_MULT[Math.min(PO.roundNo, PO_MULT.length) - 1],
+    revealed: q.a.map(() => false),
+    late: q.a.map(() => false),     // shown after the round, worth nothing
+    bank: 0, strikes: 0, control: null, award: null,
+    phase: sudden ? 'sudden' : 'faceoff',   // faceoff → play → (steal) → done
+  };
+  PO.undo = [];
+  showScreen('po-round');
+  poRender();
+  requestWakeLock();
+}
+
+function poSnap() {
+  PO.undo.push(JSON.stringify({ scores: PO.scores, R: PO.R }));
+  if (PO.undo.length > 60) PO.undo.shift();
+}
+function poUndo() {
+  const s = PO.undo.pop();
+  if (!s) return;
+  const o = JSON.parse(s);
+  PO.scores = o.scores;
+  PO.R = o.R;
+  poRender();
+}
+
+function poTap(i) {
+  const R = PO.R;
+  if (R.revealed[i]) return;
+  poSnap();
+  R.revealed[i] = true;
+  PO.flip = i;
+  poEl('po-xflash').classList.remove('on');   // a right answer clears any ✗ still on screen
+  poDing();
+  if (R.phase === 'done') { R.late[i] = true; return poRender(); }
+  if (R.phase === 'sudden') return poRender();
+  R.bank += R.q.a[i][1];
+  if (R.phase === 'steal') return poAward(1 - R.control);            // stolen!
+  if (R.phase === 'play' && R.revealed.every(Boolean)) return poAward(R.control);
+  poRender();
+}
+
+function poControl(team) {
+  poSnap();
+  const R = PO.R;
+  R.control = team;
+  R.phase = 'play';
+  if (R.revealed.every(Boolean)) return poAward(team);
+  poRender();
+}
+
+function poStrike() {
+  const R = PO.R;
+  if (R.phase === 'done') return;
+  poSnap();
+  poBuzz();
+  if (R.phase === 'faceoff' || R.phase === 'sudden') { poXFlash(1); return poRender(); }
+  if (R.phase === 'steal') { poXFlash(1); return poAward(R.control); }  // steal failed
+  R.strikes++;
+  poXFlash(R.strikes);
+  if (R.strikes >= 3) R.phase = 'steal';
+  poRender();
+}
+
+function poAward(team) {
+  const R = PO.R;
+  R.award = { team, pts: R.bank * R.mult };
+  PO.scores[team] += R.award.pts;
+  R.phase = 'done';
+  poRender();
+}
+
+function poNext() {
+  const w = PO.scores.findIndex(s => s >= PO_TARGET);
+  if (w >= 0) return poWin(w);
+  poStartRound(PO.roundNo >= PO_ROUNDS);  // after the last round: sudden death
+}
+
+function poXFlash(n) {
+  const el = poEl('po-xflash');
+  el.innerHTML = '<span>✗</span>'.repeat(n);
+  el.classList.add('on');
+  clearTimeout(poXFlash.t);
+  poXFlash.t = setTimeout(() => el.classList.remove('on'), 900);
+}
+
+function poRender() {
+  const R = PO.R;
+  const active = R.phase === 'play' ? R.control
+               : R.phase === 'steal' ? 1 - R.control
+               : R.phase === 'done' && R.award && R.award.pts > 0 ? R.award.team : null;
+  for (const t of [0, 1]) {
+    poEl('po-name' + t).textContent  = PO.teams[t];
+    poEl('po-score' + t).textContent = PO.scores[t];
+    poEl('po-team' + t).classList.toggle('on', active === t);
+  }
+  poEl('po-round-label').textContent = R.sudden ? 'Sudden death' : 'Round ' + PO.roundNo + (R.mult > 1 ? ' · ×' + R.mult : '');
+  poEl('po-bank').textContent = R.sudden ? '—' : R.bank;
+  poEl('po-group').textContent = poGroupLine(R.q);
+  poEl('po-question').textContent = R.q.q;
+
+  // Board: answers 1–4 down the left column, 5–8 down the right
+  const board = poEl('po-board');
+  board.innerHTML = '';
+  board.style.gridTemplateRows = 'repeat(' + Math.ceil(R.q.a.length / 2) + ', 1fr)';
+  R.q.a.forEach(([text, pts], i) => {
+    const b = document.createElement('button');
+    b.className = 'po-tile' + (R.revealed[i] ? (R.late[i] ? ' late' : ' open') : '') + (PO.flip === i ? ' flip' : '');
+    b.innerHTML = '<span class="n">' + (i + 1) + '</span><span class="a"></span><span class="p">' + pts + '</span>';
+    b.querySelector('.a').textContent = text;
+    b.onclick = () => poTap(i);
+    board.appendChild(b);
+  });
+  PO.flip = -1;
+
+  // Status line + action buttons for the current phase
+  const name = t => PO.teams[t];
+  let status = '', buttons = [];
+  if (R.phase === 'faceoff') {
+    status = 'Face-off! Tap the answer each player gives (✗ if it\'s not on the board), then pick who plays.';
+    buttons = [['✗ Not on board', 'x', poStrike], ['▶ ' + name(0) + ' plays', 'team', () => poControl(0)], ['▶ ' + name(1) + ' plays', 'team', () => poControl(1)]];
+  } else if (R.phase === 'play') {
+    status = name(R.control) + ' is playing. Tap right answers, ✗ for wrong ones.';
+    buttons = [['✗ Strike', 'x', poStrike]];
+  } else if (R.phase === 'steal') {
+    status = '3 strikes! ' + name(1 - R.control) + ' gets one answer to steal ' + (R.bank * R.mult) + ' points.';
+    buttons = [['✗ Steal failed', 'x', poStrike]];
+  } else if (R.phase === 'sudden') {
+    status = 'Sudden death! One answer per team. The higher answer on the board wins the game.';
+    buttons = [['🏆 ' + name(0) + ' wins', 'team', () => poWin(0)], ['🏆 ' + name(1) + ' wins', 'team', () => poWin(1)]];
+  } else {
+    const a = R.award;
+    status = a.pts > 0 ? name(a.team) + ' wins ' + a.pts + ' points' + (R.mult > 1 ? ' (' + R.bank + ' × ' + R.mult + ')' : '') + '. Tap tiles to show the rest.'
+                       : 'No points this round. Tap tiles to show the rest.';
+    const next = PO.scores.some(s => s >= PO_TARGET) ? 'See the winner →' : PO.roundNo >= PO_ROUNDS ? 'Sudden death →' : 'Next round →';
+    buttons = [[next, 'go', poNext]];
+  }
+  poEl('po-status').textContent = status;
+  poEl('po-strikes').textContent = R.phase === 'play' || R.phase === 'steal' ? '✗'.repeat(R.strikes) : '';
+
+  const bar = poEl('po-bar');
+  bar.innerHTML = '';
+  buttons.push(['↶ Undo', 'ghost', poUndo]);
+  for (const [label, cls, fn] of buttons) {
+    const b = document.createElement('button');
+    b.className = cls;
+    b.textContent = label;
+    b.onclick = fn;
+    if (cls === 'ghost') b.disabled = !PO.undo.length;
+    bar.appendChild(b);
+  }
+}
+
+function poWin(team) {
+  PO.winner = team;
+  poEl('po-win-name').textContent = PO.teams[team];
+  poEl('po-win-score').textContent = PO.teams[0] + ' ' + PO.scores[0] + '  –  ' + PO.scores[1] + ' ' + PO.teams[1];
+  showScreen('po-win');
+  playCelebration();
+}
+
+function poQuit() {
+  if (!confirm('Quit this game?')) return;
+  if (PO.rush) clearInterval(PO.rush.timer);
+  showScreen('home');
+}
+
+// ── Final Rush ────────────────────────────────────────────────────────────────
+// picks[player][question]: null = not answered yet, -1 = not on the board /
+// no answer, otherwise the index of the matching answer.
+function poRushPanel(name) {
+  for (const p of ['intro', 'run', 'reveal', 'result']) poEl('po-rush-' + p).classList.toggle('on', p === name);
+}
+
+function poRushPoints(p) {
+  const RU = PO.rush;
+  return RU.picks[p].reduce((s, pick, i) => s + (pick >= 0 ? RU.qs[i].a[pick][1] : 0), 0);
+}
+
+function poRushStart() {
+  const qs = [];
+  for (let i = 0; i < PO_RUSH_QS; i++) qs.push(poPick());
+  PO.rush = { qs, picks: [qs.map(() => null), qs.map(() => null)], player: 0, cur: 0, end: 0, timer: null, shown: 0 };
+  showScreen('po-fast');
+  poRushIntro();
+}
+
+function poRushIntro() {
+  const RU = PO.rush;
+  const team = PO.teams[PO.winner];
+  poRushPanel('intro');
+  if (RU.player === 0) {
+    poEl('po-rush-title').textContent = team + ': Player 1';
+    poEl('po-rush-text').textContent = 'Pick two players. Player 2 leaves the room or puts on headphones. Player 1 gets '
+      + PO_RUSH_TIME[0] + ' seconds for ' + PO_RUSH_QS + ' questions. Say the first thing that comes to mind! Together you need '
+      + PO_RUSH_GOAL + ' points.';
+  } else {
+    const p1 = poRushPoints(0);
+    poEl('po-rush-title').textContent = team + ': Player 2';
+    poEl('po-rush-text').textContent = 'Player 1 scored ' + p1 + '. Bring player 2 back. They get ' + PO_RUSH_TIME[1]
+      + ' seconds for the same questions and can\'t repeat player 1\'s answers. '
+      + (p1 >= PO_RUSH_GOAL ? 'Already past ' + PO_RUSH_GOAL + '. Go for a record!' : (PO_RUSH_GOAL - p1) + ' more points to reach ' + PO_RUSH_GOAL + '.');
+  }
+  requestWakeLock();
+}
+
+function poRushGo() {
+  const RU = PO.rush;
+  RU.cur = 0;
+  RU.end = Date.now() + PO_RUSH_TIME[RU.player] * 1000;
+  poRushPanel('run');
+  poRushRenderQ();
+  const clock = poEl('po-rush-clock');
+  const tick = () => {
+    const left = Math.max(0, (RU.end - Date.now()) / 1000);
+    clock.textContent = Math.ceil(left);
+    clock.classList.toggle('low', left <= 5);
+    if (left <= 0) poRushStop(true);
+  };
+  tick();
+  clearInterval(RU.timer);
+  RU.timer = setInterval(tick, 100);
+}
+
+function poRushRenderQ() {
+  const RU = PO.rush, p = RU.player, q = RU.qs[RU.cur];
+  poEl('po-rush-qn').textContent = 'Player ' + (p + 1) + ' · Question ' + (RU.cur + 1) + ' of ' + RU.qs.length;
+  poEl('po-rush-group').textContent = poGroupLine(q);
+  poEl('po-rush-q').textContent = q.q;
+  const box = poEl('po-rush-answers');
+  box.innerHTML = '';
+  const p1pick = p === 1 ? RU.picks[0][RU.cur] : null;
+  q.a.forEach(([text], i) => {
+    const b = document.createElement('button');
+    b.textContent = text;
+    if (p1pick === i) {  // so the host can spot a repeat
+      const tag = document.createElement('span');
+      tag.className = 'p1';
+      tag.textContent = 'P1';
+      b.appendChild(tag);
+    }
+    b.onclick = () => poRushAnswer(i);
+    box.appendChild(b);
+  });
+  const bar = poEl('po-rush-bar');
+  bar.innerHTML = '';
+  const btns = [['✗ Not on board', 'x', () => poRushAnswer(-1)], ['Pass ⏭', 'team', poRushAdvance]];
+  if (p === 1) btns.push(['Same as P1, try again', 'ghost', () => { poBuzz(); poXFlash(1); }]);
+  for (const [label, cls, fn] of btns) {
+    const b = document.createElement('button');
+    b.className = cls;
+    b.textContent = label;
+    b.onclick = fn;
+    bar.appendChild(b);
+  }
+}
+
+function poRushAnswer(i) {
+  const RU = PO.rush;
+  RU.picks[RU.player][RU.cur] = i;
+  poRushAdvance();
+}
+
+// Next unanswered question, wrapping around so passed ones come back.
+function poRushAdvance() {
+  const RU = PO.rush, picks = RU.picks[RU.player], n = picks.length;
+  for (let k = 1; k <= n; k++) {
+    const j = (RU.cur + k) % n;
+    if (picks[j] === null) { RU.cur = j; return poRushRenderQ(); }
+  }
+  poRushStop(false);
+}
+
+function poRushStop(timeUp) {
+  const RU = PO.rush;
+  clearInterval(RU.timer);
+  if (timeUp) poBuzz();
+  RU.picks[RU.player] = RU.picks[RU.player].map(x => x === null ? -1 : x);
+  RU.shown = 0;
+  poRushPanel('reveal');
+  poRushRenderReveal();
+}
+
+function poRushRenderReveal() {
+  const RU = PO.rush, p = RU.player;
+  const before = p === 1 ? poRushPoints(0) : 0;
+  let total = before;
+  const list = poEl('po-rev-list');
+  list.innerHTML = '';
+  RU.qs.forEach((q, i) => {
+    const pick = RU.picks[p][i];
+    const pts = pick >= 0 ? q.a[pick][1] : 0;
+    const shown = i < RU.shown;
+    if (shown) total += pts;
+    const row = document.createElement('div');
+    row.className = 'po-rev-row' + (shown ? (pts > 0 ? ' hit' : ' miss') : '');
+    row.innerHTML = '<span class="rq"></span><span class="ra"></span><span class="rp"></span>';
+    row.querySelector('.rq').textContent = q.q;
+    row.querySelector('.ra').textContent = pick >= 0 ? q.a[pick][0] : '(no match)';
+    row.querySelector('.rp').textContent = shown ? pts : '?';
+    list.appendChild(row);
+  });
+  poEl('po-rev-title').textContent = 'Player ' + (p + 1) + ': the results';
+  poEl('po-rev-sub').textContent = p === 1 ? 'Player 1 scored ' + before + ' · goal ' + PO_RUSH_GOAL : 'Goal ' + PO_RUSH_GOAL + ' with player 2';
+  poEl('po-rev-total').textContent = total;
+  poEl('po-rev-btn').textContent = RU.shown < RU.qs.length ? 'Reveal next answer'
+    : p === 0 ? 'Bring in player 2 →' : 'Final result →';
+}
+
+function poRushRevealStep() {
+  const RU = PO.rush;
+  if (RU.shown < RU.qs.length) {
+    const pick = RU.picks[RU.player][RU.shown];
+    if (pick >= 0) poDing(); else poBuzz();
+    RU.shown++;
+    return poRushRenderReveal();
+  }
+  if (RU.player === 0) { RU.player = 1; return poRushIntro(); }
+  const total = poRushPoints(0) + poRushPoints(1);
+  const won = total >= PO_RUSH_GOAL;
+  poEl('po-res-emoji').textContent = won ? '🎉' : '😅';
+  poEl('po-res-total').textContent = total;
+  poEl('po-res-text').textContent = won
+    ? PO.teams[PO.winner] + ' beat ' + PO_RUSH_GOAL + '! The Final Rush is yours!'
+    : 'So close! ' + (PO_RUSH_GOAL - total) + ' points short of ' + PO_RUSH_GOAL + '.';
+  poRushPanel('result');
+  if (won) playCelebration(); else poBuzz();
+}
+
+// ── Sounds (synthesised, like the rest of the app) ───────────────────────────
+function poDing() {
+  const c = actx(), t = c.currentTime;
+  [[880, 0], [1320, 0.09]].forEach(([f, d]) => {
+    const o = c.createOscillator(), gn = c.createGain();
+    o.type = 'triangle';
+    o.frequency.value = f;
+    gn.gain.setValueAtTime(0.0001, t + d);
+    gn.gain.exponentialRampToValueAtTime(0.35, t + d + 0.01);
+    gn.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.4);
+    o.connect(gn); gn.connect(c.destination);
+    o.start(t + d); o.stop(t + d + 0.45);
+  });
+}
+
+function poBuzz() {
+  const c = actx(), t = c.currentTime;
+  [110, 117].forEach(f => {
+    const o = c.createOscillator(), gn = c.createGain();
+    o.type = 'sawtooth';
+    o.frequency.value = f;
+    gn.gain.setValueAtTime(0.22, t);
+    gn.gain.setValueAtTime(0.22, t + 0.45);
+    gn.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
+    o.connect(gn); gn.connect(c.destination);
+    o.start(t); o.stop(t + 0.65);
+  });
+}
+
+// ── Question bank ─────────────────────────────────────────────────────────────
+// [group, question, [[answer, points], ...]] — top answers first. Points are
+// our own estimates of what 100 people would say; they add up to under 100
+// because the rest gave scattered answers.
+const POLL_EN = [
+  ['married women', 'Name something your husband does that drives you crazy.', [['Leaves dishes in the sink', 28], ['Snores', 22], ['Leaves the toilet seat up', 16], ['Always on his phone', 12], ["Doesn't listen", 9], ['Clothes on the floor', 7]]],
+  ['people', 'Name something people do right before going to sleep.', [['Brush their teeth', 34], ['Check their phone', 24], ['Read', 14], ['Set an alarm', 10], ['Watch TV', 8], ['Pray', 5]]],
+  ['single men', "Name something you'd do to impress a date.", [['Pay for dinner', 30], ['Dress up', 20], ['Cook for them', 15], ['Bring flowers', 12], ['Clean the apartment', 9], ['Wear cologne', 7]]],
+  ['people', 'Name a reason you might be late for work.', [['Traffic', 38], ['Overslept', 30], ['Train or bus delay', 12], ['The kids', 8], ["Couldn't find my keys", 6], ['Bad weather', 4]]],
+  ['teenagers', 'Name something your parents always nag you about.', [['Cleaning your room', 36], ['Homework', 22], ['Phone time', 18], ['Going to bed', 10], ['Chores', 8], ['Curfew', 4]]],
+  ['people', 'Name something you take to the beach.', [['Towel', 32], ['Sunscreen', 26], ['Umbrella', 12], ['Swimsuit', 10], ['Drinks / cooler', 9], ['A book', 6]]],
+  ['grandparents', "Name something young people do that you don't understand.", [['Stare at their phones', 40], ['Social media', 20], ['Wear ripped jeans', 14], ['Get tattoos', 10], ['Text instead of calling', 9], ['Loud music', 5]]],
+  ['people', "Name an animal you'd never want as a pet.", [['Snake', 32], ['Spider', 20], ['Skunk', 14], ['Rat', 11], ['Crocodile', 9], ['Lion', 7]]],
+  ['married men', 'Name something your wife takes too long doing.', [['Getting ready', 40], ['Shopping', 25], ['Talking on the phone', 14], ['In the bathroom', 10], ['Picking what to watch', 6]]],
+  ['people', 'Name something you find in a kitchen drawer.', [['Cutlery', 35], ['Batteries', 15], ['Rubber bands', 12], ['Takeout menus', 10], ['Scissors', 9], ['Tape', 7], ['Pens', 6]]],
+  ['kids', 'Name a vegetable you hate.', [['Broccoli', 34], ['Brussels sprouts', 24], ['Spinach', 14], ['Peas', 10], ['Carrots', 7], ['Cauliflower', 6]]],
+  ['people', "Name something that's hard to do with your eyes closed.", [['Walk', 30], ['Read', 25], ['Drive', 18], ['Cook', 10], ['Put on makeup', 9], ['Text', 5]]],
+  ['office workers', 'Name something people take home from the office.', [['Pens', 45], ['Paper', 15], ['Sticky notes', 12], ['Snacks / coffee', 10], ['Stapler', 8], ['Toilet paper', 6]]],
+  ['people', 'Name something that has wheels.', [['Car', 40], ['Bike', 25], ['Skateboard', 10], ['Bus', 8], ['Shopping cart', 7], ['Wheelchair', 5]]],
+  ['single women', 'Name a red flag on a first date.', [['Rude to the waiter', 30], ['Talks about the ex', 25], ['On the phone', 18], ['Shows up late', 12], ["Doesn't offer to pay", 8], ['Drinks too much', 5]]],
+  ['people', 'Name a food people eat with their hands.', [['Pizza', 34], ['Burger', 25], ['Fries', 14], ['Tacos', 10], ['Chicken wings', 9], ['Sandwich', 6]]],
+  ['students', 'Name an excuse for not doing your homework.', [['The dog ate it', 32], ['I forgot', 25], ['I was sick', 18], ['Left it at home', 12], ['Computer broke', 8]]],
+  ['people', 'Name something you do on a rainy day.', [['Watch movies', 36], ['Read', 18], ['Sleep', 14], ['Play games', 12], ['Bake', 8], ['Clean', 6]]],
+  ['dog owners', "Name something your dog chews that it shouldn't.", [['Shoes', 45], ['Socks', 15], ['Furniture', 14], ['The remote', 10], ["Kids' toys", 6], ['Cables', 5]]],
+  ['people', 'Name a place where you have to be quiet.', [['Library', 48], ['Church', 18], ['Hospital', 10], ['Cinema', 9], ['During an exam', 7], ['Funeral', 5]]],
+  ['people', 'Name something a lot of people are afraid of.', [['Spiders', 28], ['Heights', 22], ['Snakes', 15], ['The dark', 12], ['Flying', 9], ['Clowns', 8]]],
+  ['married couples', 'Name something couples argue about.', [['Money', 38], ['Chores', 22], ['In-laws', 14], ['The kids', 10], ['Where to eat', 8], ['Phone use', 5]]],
+  ['people', 'Name something you always forget to pack for a trip.', [['Toothbrush', 30], ['Phone charger', 28], ['Socks', 12], ['Sunscreen', 10], ['Medication', 8], ['Underwear', 7]]],
+  ['people', 'Name a job where you wear a uniform.', [['Police officer', 35], ['Nurse / doctor', 20], ['Firefighter', 15], ['Pilot', 12], ['Soldier', 10], ['Chef', 5]]],
+  ['people', 'Name something that goes up and down.', [['Elevator', 35], ['Yo-yo', 18], ['Seesaw', 14], ['Stock market', 12], ['Roller coaster', 10], ['Temperature', 6]]],
+  ['teenagers', "Name an app you can't live without.", [['Instagram', 30], ['TikTok', 28], ['WhatsApp', 18], ['Snapchat', 12], ['YouTube', 7], ['Spotify', 5]]],
+  ['people', 'Name something guests do at a wedding.', [['Dance', 35], ['Cry', 20], ['Eat', 15], ['Drink', 12], ['Take photos', 10], ['Catch the bouquet', 5]]],
+  ['people', 'Name a superhero.', [['Superman', 35], ['Spider-Man', 25], ['Batman', 22], ['Wonder Woman', 8], ['Iron Man', 6]]],
+  ['people', "Name something you'd find in a hotel room.", [['Bed', 30], ['TV', 20], ['Towels', 15], ['Minibar', 12], ['Tiny shampoo bottles', 9], ['Bible', 8]]],
+  ['people', 'Name a reason you wake up in the middle of the night.', [['Need the bathroom', 40], ['Bad dream', 20], ['A noise', 15], ['Thirsty', 10], ['Baby crying', 8], ['Too hot', 4]]],
+  ['grandparents', "Name something you did as a kid that kids don't do today.", [['Play outside', 40], ['Write letters', 18], ['Climb trees', 14], ['Read books', 12], ['Use a landline', 8], ['Walk to school', 5]]],
+  ['people', 'Name something people put on a burger.', [['Cheese', 32], ['Ketchup', 25], ['Lettuce', 14], ['Onions', 10], ['Pickles', 9], ['Tomato', 6]]],
+  ['people', 'Name a sport played with a ball.', [['Football / soccer', 40], ['Basketball', 22], ['Tennis', 12], ['Baseball', 10], ['Volleyball', 8], ['Golf', 5]]],
+  ['single men', "Name something you'd never admit to your friends.", [['Crying at a movie', 30], ['Liking a cheesy song', 20], ['Being scared of the dark', 15], ['Sleeping with a teddy', 12], ['Getting dumped', 10], ['Asking for directions', 6]]],
+  ['people', "Name something you do when you can't sleep.", [['Check my phone', 28], ['Count sheep', 26], ['Read', 15], ['Watch TV', 12], ['Drink warm milk', 9], ['Toss and turn', 6]]],
+  ['people', 'Name a yellow fruit.', [['Banana', 55], ['Lemon', 25], ['Pineapple', 10], ['Mango', 5], ['Pear', 3]]],
+  ['kids', 'Name something you want to be when you grow up.', [['Doctor', 22], ['Firefighter', 18], ['Police officer', 15], ['Astronaut', 14], ['YouTuber', 12], ['Teacher', 10], ['Football player', 6]]],
+  ['people', "Name something you'd hate to find in your food.", [['A hair', 50], ['A bug', 30], ['A fingernail', 8], ['A plaster', 6], ['Plastic', 4]]],
+  ['parents', 'Name something kids lose all the time.', [['Socks', 30], ['Shoes', 18], ['Toys', 16], ['Jacket', 14], ['Homework', 10], ['Phone', 8]]],
+  ['people', "Name something you'd grab if your house was on fire.", [['My pets', 38], ['Family photos', 26], ['Phone', 14], ['Passport / documents', 10], ['Jewelry', 6], ['Laptop', 4]]],
+];
+
+const POLL_DE = [
+  ['Leute', 'Nenne etwas, das man beim Bäcker kauft.', [['Brötchen', 45], ['Brot', 25], ['Brezel', 12], ['Kuchen', 8], ['Croissant', 6]]],
+  ['verheiratete Frauen', 'Nenne etwas, das dein Mann nie findet.', [['Schlüssel', 30], ['Socken', 22], ['Brille', 15], ['Handy', 12], ['Fernbedienung', 10], ['Geldbeutel', 6]]],
+  ['Rentner', 'Nenne etwas, worüber du dich gern beschwerst.', [['Das Wetter', 30], ['Die Jugend', 22], ['Politik', 18], ['Die Preise', 14], ['Gesundheit', 8], ['Die Bahn', 6]]],
+  ['Pendler', 'Nenne einen Grund, warum die Bahn Verspätung hat.', [['Signalstörung', 30], ['Bauarbeiten', 22], ['Technische Störung', 18], ['Verzögerung im Betriebsablauf', 12], ['Wetter', 10], ['Personalmangel', 8]]],
+  ['Teenager', 'Nenne etwas Peinliches, das deine Eltern machen.', [['Tanzen', 32], ['Singen', 20], ['Kinderfotos zeigen', 15], ['Sich vor Freunden küssen', 14], ['Jugendsprache benutzen', 12], ['Laut telefonieren', 5]]],
+  ['Leute', 'Nenne etwas, das man auf eine Pizza legt.', [['Salami', 35], ['Käse', 25], ['Schinken', 14], ['Pilze', 12], ['Ananas', 8], ['Paprika', 5]]],
+  ['Leute', 'Nenne etwas, das man im Sommer macht.', [['Schwimmen', 32], ['Grillen', 28], ['Eis essen', 18], ['Urlaub', 12], ['Sonnenbaden', 7]]],
+  ['Studenten', 'Nenne etwas, wovon du dich hauptsächlich ernährst.', [['Nudeln', 40], ['Pizza', 22], ['Döner', 15], ['Toast', 10], ['Instant-Nudeln', 8], ['Mensa-Essen', 5]]],
+  ['Leute', 'Nenne etwas, das man auf dem Weihnachtsmarkt kauft.', [['Glühwein', 45], ['Gebrannte Mandeln', 20], ['Bratwurst', 14], ['Lebkuchen', 10], ['Crêpes', 6], ['Deko', 5]]],
+  ['Kinder', 'Nenne etwas, das du nicht gern isst.', [['Spinat', 30], ['Rosenkohl', 25], ['Brokkoli', 15], ['Fisch', 12], ['Pilze', 10], ['Zwiebeln', 5]]],
+  ['Frauen', 'Nenne etwas, das man immer in einer Handtasche findet.', [['Geldbeutel', 30], ['Schlüssel', 22], ['Handy', 18], ['Taschentücher', 12], ['Lippenstift', 10], ['Kaugummi', 6]]],
+  ['Leute', 'Nenne etwas, das Deutsche gern machen.', [['Pünktlich sein', 30], ['Bier trinken', 25], ['Wandern', 14], ['Müll trennen', 12], ['Sich beschweren', 10], ['Urlaub machen', 6]]],
+  ['verheiratete Männer', 'Nenne etwas, wofür deine Frau zu lange braucht.', [['Sich fertig machen', 40], ['Shoppen', 25], ['Telefonieren', 14], ['Im Bad', 12], ['Essen aussuchen', 6]]],
+  ['Leute', 'Nenne etwas, das man im Wartezimmer macht.', [['Aufs Handy schauen', 40], ['Zeitschriften lesen', 30], ['Warten', 12], ['Leute beobachten', 10], ['Schlafen', 5]]],
+  ['Leute', 'Nenne ein Tier, das man im Wald sieht.', [['Reh', 35], ['Fuchs', 20], ['Wildschwein', 15], ['Eichhörnchen', 14], ['Hase', 8], ['Vogel', 6]]],
+  ['Leute', 'Nenne etwas, das man an Silvester macht.', [['Feuerwerk', 40], ['Anstoßen', 22], ['Feiern', 15], ['Bleigießen', 10], ['Dinner for One schauen', 8], ['Vorsätze fassen', 5]]],
+  ['Eltern', 'Nenne etwas, das Kinder ständig verlieren.', [['Socken', 30], ['Handschuhe', 22], ['Mütze', 15], ['Spielzeug', 14], ['Trinkflasche', 10], ['Schulsachen', 6]]],
+  ['Leute', 'Nenne etwas, das man an den Strand mitnimmt.', [['Handtuch', 32], ['Sonnencreme', 26], ['Sonnenschirm', 12], ['Badesachen', 10], ['Getränke', 9], ['Ein Buch', 6]]],
+  ['Leute', 'Nenne etwas, das man vor dem Schlafengehen macht.', [['Zähne putzen', 35], ['Handy checken', 24], ['Lesen', 14], ['Wecker stellen', 10], ['Fernsehen', 8], ['Licht ausmachen', 5]]],
+  ['Singles', 'Nenne etwas, das bei einem ersten Date gar nicht geht.', [['Zu spät kommen', 28], ['Über den Ex reden', 25], ['Ständig am Handy', 20], ['Unhöflich zum Kellner', 12], ['Zu viel trinken', 8], ['Nicht zahlen wollen', 5]]],
+  ['Autofahrer', 'Nenne etwas, das man im Stau macht.', [['Musik hören', 35], ['Fluchen', 20], ['Aufs Handy schauen', 15], ['Singen', 12], ['Essen', 8], ['In der Nase bohren', 6]]],
+  ['Leute', 'Nenne einen Beruf mit Uniform.', [['Polizist', 38], ['Feuerwehrmann', 22], ['Arzt / Pflege', 15], ['Pilot', 12], ['Soldat', 8], ['Koch', 5]]],
+  ['Leute', 'Nenne etwas, wovor viele Angst haben.', [['Spinnen', 30], ['Höhe', 22], ['Schlangen', 14], ['Dunkelheit', 12], ['Fliegen', 10], ['Zahnarzt', 8]]],
+  ['Leute', 'Nenne etwas, das man immer im Kühlschrank hat.', [['Milch', 30], ['Butter', 22], ['Käse', 18], ['Eier', 12], ['Bier', 10], ['Senf', 5]]],
+  ['Rentner', 'Nenne etwas, das früher besser war.', [['Alles', 30], ['Die Musik', 20], ['Die Jugend', 15], ['Die Preise', 14], ['Der Zusammenhalt', 10], ['Das Wetter', 6]]],
+  ['Fußballfans', 'Nenne ein Land, das gut im Fußball ist.', [['Brasilien', 30], ['Deutschland', 25], ['Argentinien', 15], ['Spanien', 12], ['Frankreich', 10], ['Italien', 6]]],
+  ['Leute', 'Nenne etwas, das Gäste auf einer Hochzeit machen.', [['Tanzen', 35], ['Weinen', 18], ['Essen', 15], ['Trinken', 12], ['Fotos machen', 10], ['Brautstrauß fangen', 6]]],
+  ['Teenager', 'Nenne eine App, ohne die du nicht leben kannst.', [['Instagram', 30], ['TikTok', 28], ['WhatsApp', 20], ['Snapchat', 10], ['YouTube', 7], ['Spotify', 5]]],
+  ['Leute', 'Nenne etwas, das man am Sonntag macht.', [['Ausschlafen', 35], ['Spazieren gehen', 20], ['Familie besuchen', 15], ['Kaffee und Kuchen', 12], ['Tatort schauen', 10], ['Gar nichts', 5]]],
+  ['Leute', 'Nenne etwas, das gelb ist.', [['Banane', 35], ['Sonne', 25], ['Zitrone', 18], ['Briefkasten', 10], ['Küken', 6], ['Mais', 4]]],
+];
 </script>
 </body>
 </html>
