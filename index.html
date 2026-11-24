@@ -1110,7 +1110,7 @@
     <div class="frenzy-tag">⚡ Final Rush</div>
     <div class="frenzy-card-label" id="po-rush-title"></div>
     <div class="frenzy-card-desc" id="po-rush-text" style="max-width:560px"></div>
-    <button class="btn btn-primary" onclick="poRushGo()" style="max-width:280px;">▶ Start the clock</button>
+    <button class="btn btn-primary" onclick="poRushReady()" style="max-width:280px;">Show question 1 →</button>
     <button class="btn btn-ghost" onclick="poQuit()" style="max-width:280px;padding:10px;">Quit</button>
   </div>
   <div class="po-panel" id="po-rush-run">
@@ -1784,6 +1784,15 @@ function updateFullscreenUI() {
 // ── Audio engine ──────────────────────────────────────────────────────────────
 let _actx = null;
 let _audioStale = false;  // set when the app goes to the background
+
+// iPhones mute web audio when the ring/silent switch is on silent, unless the
+// page asks for the "playback" audio session (iOS 17+). The catch: like a music
+// app, this pauses other audio playing on the phone while the game makes sound.
+function usePlaybackSession() {
+  try { if (navigator.audioSession && navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback'; } catch (_) {}
+}
+usePlaybackSession();
+
 function actx() {
   if (!_actx || _actx.state === 'closed') _actx = new (window.AudioContext || window.webkitAudioContext)();
   // iOS uses 'interrupted' (not just 'suspended') after the app is backgrounded
@@ -1796,6 +1805,7 @@ function actx() {
 // the old context silently dead even when it reports 'running', so we throw it
 // away and build a fresh one — every sound creates its own nodes, so that's safe.
 function unlockAudio() {
+  usePlaybackSession();
   if (_audioStale && _actx) { try { _actx.close(); } catch (_) {} _actx = null; }
   if (!_audioStale && _actx && _actx.state === 'running') return;
   _audioStale = false;
@@ -2215,11 +2225,24 @@ function poRushIntro() {
   requestWakeLock();
 }
 
-function poRushGo() {
+// Show question 1 with the clock stopped, so the host can read it out first.
+function poRushReady() {
   const RU = PO.rush;
   RU.cur = 0;
-  RU.end = Date.now() + PO_RUSH_TIME[RU.player] * 1000;
+  RU.ready = true;
+  clearInterval(RU.timer);
+  const clock = poEl('po-rush-clock');
+  clock.textContent = PO_RUSH_TIME[RU.player];
+  clock.classList.remove('low');
   poRushPanel('run');
+  poRushRenderQ();
+}
+
+function poRushGo() {
+  const RU = PO.rush;
+  if (!RU.ready) return;
+  RU.ready = false;
+  RU.end = Date.now() + PO_RUSH_TIME[RU.player] * 1000;
   poRushRenderQ();
   const clock = poEl('po-rush-clock');
   let lastSec = null;
@@ -2262,8 +2285,10 @@ function poRushRenderQ() {
   });
   const bar = poEl('po-rush-bar');
   bar.innerHTML = '';
-  const btns = [['✗ Not on board', 'x', () => poRushAnswer(-1)], ['Pass ⏭', 'team', poRushAdvance]];
-  if (p === 1) btns.push(['Same as P1, try again', 'ghost', () => { poBuzz(); poXFlash(1); }]);
+  // Before the clock runs, the only action is starting it
+  const btns = RU.ready ? [['▶ Start the clock', 'go', poRushGo]]
+             : [['✗ Not on board', 'x', () => poRushAnswer(-1)], ['Pass ⏭', 'team', poRushAdvance]];
+  if (p === 1 && !RU.ready) btns.push(['Same as P1, try again', 'ghost', () => { poBuzz(); poXFlash(1); }]);
   for (const [label, cls, fn] of btns) {
     const b = document.createElement('button');
     b.className = cls;
@@ -2275,6 +2300,7 @@ function poRushRenderQ() {
 
 function poRushAnswer(i) {
   const RU = PO.rush;
+  if (RU.ready) poRushGo();   // the player answered before the host started the clock
   RU.picks[RU.player][RU.cur] = i;
   poBlip();
   poRushAdvance();
