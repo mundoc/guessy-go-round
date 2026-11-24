@@ -725,7 +725,7 @@
     }
     @keyframes po-x { from { transform: scale(2.2); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-    /* Final Rush */
+    /* Fast Round */
     .po-panel { display: none; flex-direction: column; align-items: center; gap: 8px; width: 100%; height: 100%; min-height: 0; }
     .po-panel.on { display: flex; }
     .po-panel.center { justify-content: center; gap: 14px; }
@@ -1070,7 +1070,7 @@
     <h3>Winning</h3>
     <ol>
       <li>First team to <strong>300 points</strong> wins. If nobody has 300 after round 4, play <strong>sudden death</strong>: one answer per team, and the higher answer on the board wins.</li>
-      <li><strong>Final Rush:</strong> the winners pick two players. Player 1 gets 20 seconds for 5 questions. Then player 2 gets 25 seconds for the same questions and can't repeat player 1's answers. Reach <strong>200 points</strong> together to win the Rush. The host taps each answer as it's said.</li>
+      <li><strong>Fast Round:</strong> the winners pick two players. Player 1 gets 20 seconds for 5 questions. Then player 2 gets 25 seconds for the same questions and can't repeat player 1's answers. Reach <strong>200 points</strong> together to win the Fast Round. The host taps each answer as it's said.</li>
     </ol>
   </div>
   <button class="btn btn-primary" onclick="showScreen('po-setup')" style="max-width:380px;width:100%;">Got it!</button>
@@ -1100,14 +1100,14 @@
   <div class="wins-label">WINNER</div>
   <div class="winner-name" id="po-win-name">Team A</div>
   <div class="first-to-label" id="po-win-score"></div>
-  <button class="btn btn-primary" onclick="poRushStart()" style="max-width:340px;width:100%;">⚡ Play the Final Rush</button>
+  <button class="btn btn-primary" onclick="poRushStart()" style="max-width:340px;width:100%;">⚡ Play the Fast Round</button>
   <button class="btn btn-ghost"   onclick="showScreen('po-setup')" style="max-width:340px;width:100%;">New Game</button>
   <button class="btn btn-ghost"   onclick="showScreen('home')" style="max-width:340px;width:100%;">Home</button>
 </div>
 
 <div id="screen-po-fast" class="screen">
   <div class="po-panel center" id="po-rush-intro">
-    <div class="frenzy-tag">⚡ Final Rush</div>
+    <div class="frenzy-tag">⚡ Fast Round</div>
     <div class="frenzy-card-label" id="po-rush-title"></div>
     <div class="frenzy-card-desc" id="po-rush-text" style="max-width:560px"></div>
     <button class="btn btn-primary" onclick="poRushReady()" style="max-width:280px;">Show question 1 →</button>
@@ -1204,7 +1204,49 @@ function showScreen(name) {
   document.getElementById('screen-' + name).classList.add('active');
   // Scroll to top on navigation
   window.scrollTo(0, 0);
+  applyUpdateIfSafe();
 }
+
+// ── Auto-update ───────────────────────────────────────────────────────────────
+// A home-screen web app on iPhone can sit suspended in the background for days,
+// so a phone keeps running an old version long after a deploy. Whenever the app
+// comes back to the foreground we check whether the live page has changed; if
+// it has, we reload — but only on a menu screen, never in the middle of a game.
+const MENU_SCREENS = ['home', 'setup', 'categories', 'instructions', 'po-setup', 'po-rules'];
+let _pageSig = null;
+let _updateReady = false;
+
+async function livePageSig() {
+  if (location.protocol === 'file:') return null;
+  try {
+    const r = await fetch(location.pathname + '?v=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) return null;
+    const t = await r.text();
+    let h = 0;
+    for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0;
+    return t.length + ':' + h;
+  } catch (_) { return null; }
+}
+
+function onMenuScreen() {
+  const s = document.querySelector('.screen.active');
+  return !!s && MENU_SCREENS.includes(s.id.replace('screen-', ''));
+}
+
+function applyUpdateIfSafe() {
+  if (_updateReady && onMenuScreen() && document.visibilityState === 'visible') location.reload();
+}
+
+async function checkForUpdate() {
+  const sig = await livePageSig();
+  if (!sig) return;
+  if (!_pageSig) { _pageSig = sig; return; }   // first check: remember this version
+  if (sig !== _pageSig) { _updateReady = true; applyUpdateIfSafe(); }
+}
+window.addEventListener('load', checkForUpdate);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') checkForUpdate();
+});
 
 // ── Language ───────────────────────────────────────────────────────────────────
 function wb() { return g.lang === 'de' ? WORDS_DE : WORDS_EN; }
@@ -1962,7 +2004,7 @@ document.addEventListener('visibilitychange', () => {
 // people" gave (our own estimates — see POLL_EN / POLL_DE). The host taps what
 // the teams say, adds strikes, and the app keeps the bank and the score.
 // First to PO_TARGET wins; if nobody gets there in PO_ROUNDS rounds, a sudden-
-// death question decides. The winners then play the Final Rush: two players,
+// death question decides. The winners then play the Fast Round: two players,
 // PO_RUSH_QS quick-fire questions, PO_RUSH_GOAL points to beat.
 const PO_TARGET    = 300;
 const PO_ROUNDS    = 4;
@@ -2186,7 +2228,7 @@ function poQuit() {
   showScreen('home');
 }
 
-// ── Final Rush ────────────────────────────────────────────────────────────────
+// ── Fast Round ────────────────────────────────────────────────────────────────
 // picks[player][question]: null = not answered yet, -1 = not on the board /
 // no answer, otherwise the index of the matching answer.
 function poRushPanel(name) {
@@ -2265,7 +2307,8 @@ function poRushGo() {
 
 function poRushRenderQ() {
   const RU = PO.rush, p = RU.player, q = RU.qs[RU.cur];
-  poEl('po-rush-qn').textContent = 'Player ' + (p + 1) + ' · Question ' + (RU.cur + 1) + ' of ' + RU.qs.length;
+  poEl('po-rush-qn').textContent = 'Player ' + (p + 1) + ' · Question ' + (RU.cur + 1) + ' of ' + RU.qs.length
+    + (RU.ready ? ' · Read it out, then start the clock' : '');
   poEl('po-rush-group').textContent = poGroupLine(q);
   poEl('po-rush-q').textContent = q.q;
   const box = poEl('po-rush-answers');
@@ -2371,7 +2414,7 @@ function poRushRevealStep() {
   poEl('po-res-emoji').textContent = won ? '🎉' : '😅';
   poEl('po-res-total').textContent = total;
   poEl('po-res-text').textContent = won
-    ? PO.teams[PO.winner] + ' beat ' + PO_RUSH_GOAL + '! The Final Rush is yours!'
+    ? PO.teams[PO.winner] + ' beat ' + PO_RUSH_GOAL + '! The Fast Round is yours!'
     : 'So close! ' + (PO_RUSH_GOAL - total) + ' points short of ' + PO_RUSH_GOAL + '.';
   poRushPanel('result');
   if (won) poSfxWin(); else poSfxSad();
@@ -2454,15 +2497,15 @@ function poSfxBank() {
   poTone(2093, 0.32, 0.5, { vol: 0.22 });
 }
 
-// Final Rush: clock tick (a short woodblock click); higher and louder near the end
+// Fast Round: clock tick (a short woodblock click); higher and louder near the end
 function poTick(urgent) {
   poTone(urgent ? 2000 : 1500, 0, 0.05, { type: 'sine', vol: urgent ? 0.5 : 0.3, attack: 0.002, to: urgent ? 1600 : 1100 });
 }
 
-// Final Rush: answer logged (neutral blip, gives nothing away)
+// Fast Round: answer logged (neutral blip, gives nothing away)
 function poBlip() { poTone(1200, 0, 0.07, { type: 'sine', vol: 0.2, attack: 0.003 }); }
 
-// A team wins the game / the Final Rush: victory fanfare with a sparkle trill
+// A team wins the game / the Fast Round: victory fanfare with a sparkle trill
 function poSfxWin() {
   const mel = [[523, 0, 0.1], [523, 0.12, 0.1], [523, 0.24, 0.1], [659, 0.36, 0.3], [587, 0.7, 0.14], [659, 0.86, 0.14], [784, 1.02, 0.9]];
   mel.forEach(([f, at, d]) => poTone(f, at, d, { type: 'square', vol: 0.17 }));
@@ -2470,7 +2513,7 @@ function poSfxWin() {
   [1568, 2093, 2637, 3136, 2637, 3136].forEach((f, i) => poTone(f, 1.1 + i * 0.07, 0.15, { type: 'sine', vol: 0.12 }));
 }
 
-// Final Rush: missed the goal
+// Fast Round: missed the goal
 function poSfxSad() {
   [[523, 0], [494, 0.35], [466, 0.7]].forEach(([f, at]) => poTone(f, at, 0.32, { type: 'square', vol: 0.15 }));
   poTone(440, 1.05, 0.9, { type: 'square', vol: 0.15, to: 415 });
@@ -2561,6 +2604,46 @@ const POLL_EN = [
   ['travellers', 'Name something you do at the airport while you wait.', [['Eat', 30], ['Shop', 22], ['Check my phone', 20], ['Read', 12], ['Sleep', 8], ['People-watch', 6]]],
   ['people', 'Name something that melts.', [['Ice', 40], ['Ice cream', 25], ['Chocolate', 15], ['Snow', 10], ['Butter', 6], ['Cheese', 3]]],
   ['dog owners', 'Name a trick people teach their dog.', [['Sit', 40], ['Give paw', 22], ['Roll over', 15], ['Lie down', 12], ['Play dead', 8]]],
+  ['people', 'Name something people do at the gym.', [['Lift weights', 35], ['Run on the treadmill', 25], ['Take selfies', 12], ['Stretch', 10], ['Sweat', 8], ['Chat', 5]]],
+  ['married women', 'Name a chore your husband is bad at.', [['Laundry', 30], ['Cleaning the bathroom', 22], ['Cooking', 18], ['Ironing', 12], ['The dishes', 10], ['Vacuuming', 5]]],
+  ['people', 'Name something you bring to a picnic.', [['Blanket', 30], ['Sandwiches', 25], ['Drinks', 14], ['Basket', 12], ['Fruit', 10], ['Plates', 5]]],
+  ['kids', 'Name a cartoon character.', [['Mickey Mouse', 30], ['SpongeBob', 20], ['Bugs Bunny', 15], ['Peppa Pig', 12], ['Scooby-Doo', 10], ['Garfield', 8]]],
+  ['people', 'Name a reason someone might cry.', [['A sad movie', 28], ['A breakup', 22], ['Someone died', 18], ['Pain', 12], ['Happy tears', 10], ['Cutting onions', 6]]],
+  ['people', 'Name something people do on their birthday.', [['Eat cake', 32], ['Party', 25], ['Open presents', 18], ['Blow out candles', 12], ['Go out to dinner', 8]]],
+  ['single women', 'Name the first thing you check on a dating profile.', [['Photos', 50], ['Age', 15], ['Height', 12], ['Job', 10], ['Bio', 8]]],
+  ['people', "Name something you can't do in a power cut.", [['Charge my phone', 30], ['Watch TV', 25], ['Use the internet', 18], ['Cook', 12], ['Turn on the lights', 10]]],
+  ['teenagers', 'Name something you spend your money on.', [['Food', 30], ['Clothes', 28], ['Games', 15], ['Going out', 12], ['Makeup', 8], ['Concerts', 5]]],
+  ['people', 'Name a famous wizard or witch.', [['Harry Potter', 45], ['Gandalf', 20], ['Merlin', 15], ['Hermione', 10], ['Dumbledore', 6]]],
+  ['parents', 'Name something your kids always want at the supermarket.', [['Sweets', 45], ['Toys', 18], ['Ice cream', 14], ['Crisps', 10], ['Sugary cereal', 8]]],
+  ['people', 'Name something you do on a long flight.', [['Sleep', 38], ['Watch movies', 30], ['Read', 12], ['Eat', 10], ['Listen to music', 6]]],
+  ['office workers', 'Name something that annoys you at work.', [['Meetings', 30], ['Loud coworkers', 22], ['A slow computer', 15], ['Emails', 12], ['The boss', 10], ['Broken coffee machine', 6]]],
+  ['people', 'Name something in a first-aid kit.', [['Plasters', 45], ['Bandage', 20], ['Scissors', 10], ['Disinfectant', 10], ['Gloves', 6], ['Painkillers', 5]]],
+  ['people', 'Name something people are addicted to.', [['Their phone', 35], ['Coffee', 25], ['Sugar', 12], ['Social media', 12], ['Cigarettes', 8], ['TV shows', 5]]],
+  ['grandparents', 'Name something you always tell your grandkids.', [['I love you', 25], ['Eat your vegetables', 24], ['Be careful', 18], ["You've grown so much", 15], ['Put a jacket on', 10]]],
+  ['people', 'Name something you think of when you hear "Christmas".', [['Christmas tree', 30], ['Presents', 28], ['Santa', 18], ['Snow', 10], ['Cookies', 8], ['Lights', 5]]],
+  ['people', 'Name an animal that lives in the ocean.', [['Shark', 32], ['Dolphin', 25], ['Whale', 20], ['Octopus', 10], ['Jellyfish', 6], ['Fish', 4]]],
+  ['married couples', 'Name something you do on date night.', [['Go out to dinner', 45], ['See a movie', 25], ['Have drinks', 12], ['Go for a walk', 8], ['Dancing', 5]]],
+  ['single men', "Name something you shouldn't say on a first date.", [['Talk about your ex', 35], ['I love you', 20], ["Let's get married", 15], ['How much you earn', 10], ['Comments about weight', 8]]],
+  ['students', 'Name something you find in a school backpack.', [['Books', 32], ['Pencil case', 25], ['Notebooks', 18], ['Lunch', 12], ['Water bottle', 8]]],
+  ['travellers', 'Name something people buy at the airport.', [['Snacks', 30], ['Water', 22], ['Magazines', 15], ['Perfume', 12], ['Neck pillow', 10], ['Souvenirs', 6]]],
+  ['people', 'Name a dance.', [['Salsa', 30], ['Tango', 22], ['Waltz', 18], ['Hip hop', 12], ['Ballet', 10], ['Macarena', 5]]],
+  ['kids', 'Name something you do at the swimming pool.', [['Swim', 38], ['Jump in', 25], ['Splash people', 15], ['Go down the slide', 12], ['Dive', 6]]],
+  ['people', 'Name something you need when you have a cold.', [['Tissues', 40], ['Tea', 20], ['Medicine', 18], ['Soup', 10], ['Rest', 8]]],
+  ['people', 'Name a famous scientist.', [['Einstein', 55], ['Newton', 18], ['Marie Curie', 10], ['Darwin', 8], ['Hawking', 5]]],
+  ['single men', 'Name something you actually know how to cook.', [['Pasta', 35], ['Eggs', 25], ['Instant noodles', 15], ['Toast', 10], ['Steak', 8], ['Nothing', 5]]],
+  ['people', "Name something you do when you're bored.", [['Go on my phone', 40], ['Watch TV', 20], ['Sleep', 15], ['Eat', 12], ['Read', 8]]],
+  ['people', 'Name something with lots of buttons.', [['Remote control', 38], ['Keyboard', 25], ['Phone', 12], ['Calculator', 10], ['Shirt', 8], ['Elevator', 5]]],
+  ['people', 'Name a really fast animal.', [['Cheetah', 55], ['Horse', 15], ['Lion', 10], ['Falcon', 8], ['Rabbit', 6]]],
+  ['people', 'Name something sticky.', [['Honey', 35], ['Glue', 25], ['Tape', 15], ['Chewing gum', 12], ['Syrup', 8]]],
+  ['people', 'Name something people do on a Sunday morning.', [['Sleep in', 40], ['Have brunch', 20], ['Go to church', 15], ['Read the paper', 10], ['Go for a run', 8]]],
+  ['teenagers', 'Name a place you hang out with friends.', [["Someone's house", 30], ['The mall', 25], ['The park', 18], ['The cinema', 10], ['A fast-food place', 10]]],
+  ['people', 'Name something people lie about.', [['Their age', 40], ['Their weight', 22], ['How much they earn', 15], ['Their height', 10], ['Being busy', 8]]],
+  ['people', 'Name something that flies.', [['Bird', 35], ['Plane', 30], ['Helicopter', 12], ['Bee / insects', 8], ['Kite', 8], ['Drone', 5]]],
+  ['dog owners', 'Name something your dog is scared of.', [['Fireworks', 35], ['Thunder', 25], ['The vacuum cleaner', 18], ['The vet', 10], ['Cats', 6]]],
+  ['people', 'Name something you put in coffee.', [['Milk', 45], ['Sugar', 30], ['Cream', 12], ['Syrup', 5], ['Cinnamon', 4]]],
+  ['people', 'Name a job where you start really early in the morning.', [['Baker', 40], ['Farmer', 20], ['Postman', 14], ['Nurse', 10], ['Bin collector', 10]]],
+  ['married men', 'Name something you forget that gets you in trouble.', [['Our anniversary', 45], ['Her birthday', 25], ['Taking out the trash', 12], ['Picking up the kids', 8], ['Buying milk', 6]]],
+  ['people', 'Name something you do before a job interview.', [['Dress up', 30], ['Practise answers', 25], ['Research the company', 18], ['Get nervous', 12], ['Shower', 8]]],
 ];
 
 const POLL_DE = [
@@ -2624,6 +2707,46 @@ const POLL_DE = [
   ['Radfahrer', 'Nenne etwas, das zu einem Fahrrad gehört.', [['Reifen', 25], ['Klingel', 20], ['Helm', 18], ['Kette', 15], ['Sattel', 12], ['Licht', 8]]],
   ['Fußballfans', 'Nenne etwas, das man im Stadion macht.', [['Singen', 30], ['Bier trinken', 25], ['Jubeln', 18], ['Bratwurst essen', 12], ['Den Schiri beschimpfen', 10]]],
   ['Reisende', 'Nenne etwas, das man in einem Hotelzimmer findet.', [['Bett', 30], ['Fernseher', 20], ['Handtücher', 15], ['Minibar', 12], ['Kleine Shampoos', 10], ['Föhn', 6]]],
+  ['Leute', 'Nenne etwas, das man im Fitnessstudio macht.', [['Gewichte heben', 35], ['Aufs Laufband', 25], ['Selfies machen', 12], ['Dehnen', 10], ['Schwitzen', 8], ['Quatschen', 5]]],
+  ['Leute', 'Nenne etwas, das man zu einem Picknick mitnimmt.', [['Decke', 30], ['Belegte Brote', 25], ['Getränke', 15], ['Obst', 12], ['Korb', 10], ['Teller', 5]]],
+  ['Kinder', 'Nenne eine Zeichentrickfigur.', [['Micky Maus', 30], ['SpongeBob', 20], ['Biene Maja', 15], ['Peppa Wutz', 12], ['Benjamin Blümchen', 10], ['Die Maus', 8]]],
+  ['Leute', 'Nenne etwas, das man an seinem Geburtstag macht.', [['Kuchen essen', 32], ['Feiern', 25], ['Geschenke auspacken', 18], ['Kerzen auspusten', 12], ['Essen gehen', 8]]],
+  ['Teenager', 'Nenne etwas, wofür du dein Taschengeld ausgibst.', [['Essen', 30], ['Klamotten', 28], ['Games', 15], ['Ausgehen', 12], ['Schminke', 8], ['Konzerte', 5]]],
+  ['Eltern', 'Nenne etwas, das Kinder an der Supermarktkasse haben wollen.', [['Süßigkeiten', 50], ['Überraschungsei', 18], ['Kaugummi', 12], ['Spielzeug', 10], ['Eis', 6]]],
+  ['Reisende', 'Nenne etwas, das man auf einem langen Flug macht.', [['Schlafen', 38], ['Filme schauen', 30], ['Lesen', 12], ['Essen', 10], ['Musik hören', 6]]],
+  ['Büroangestellte', 'Nenne etwas, das dich bei der Arbeit nervt.', [['Meetings', 30], ['Laute Kollegen', 22], ['Langsamer Computer', 15], ['E-Mails', 12], ['Der Chef', 10], ['Kaputte Kaffeemaschine', 6]]],
+  ['Leute', 'Nenne etwas, das in einem Verbandskasten ist.', [['Pflaster', 45], ['Verband', 22], ['Schere', 10], ['Handschuhe', 10], ['Desinfektionsmittel', 8]]],
+  ['Großeltern', 'Nenne etwas, das du deinen Enkeln immer sagst.', [['Hab dich lieb', 25], ['Iss dein Gemüse', 24], ['Pass auf dich auf', 18], ['Bist du groß geworden', 15], ['Zieh eine Jacke an', 10]]],
+  ['Leute', 'Nenne etwas, das man mit Weihnachten verbindet.', [['Tannenbaum', 32], ['Geschenke', 28], ['Plätzchen', 14], ['Schnee', 10], ['Weihnachtsmarkt', 8], ['Kerzen', 5]]],
+  ['Leute', 'Nenne ein Tier, das im Meer lebt.', [['Hai', 32], ['Delfin', 25], ['Wal', 20], ['Krake', 10], ['Qualle', 6], ['Fisch', 4]]],
+  ['Paare', 'Nenne etwas, das man an einem Date-Abend macht.', [['Essen gehen', 45], ['Ins Kino', 25], ['Was trinken gehen', 12], ['Spazieren gehen', 8], ['Tanzen', 5]]],
+  ['Schüler', 'Nenne etwas, das in einem Schulranzen ist.', [['Bücher', 32], ['Federmäppchen', 25], ['Hefte', 18], ['Pausenbrot', 12], ['Trinkflasche', 8]]],
+  ['Leute', 'Nenne einen Tanz.', [['Walzer', 30], ['Salsa', 22], ['Tango', 18], ['Hip-Hop', 12], ['Ballett', 10], ['Discofox', 5]]],
+  ['Kinder', 'Nenne etwas, das man im Schwimmbad macht.', [['Schwimmen', 38], ['Vom Sprungbrett springen', 25], ['Rutschen', 15], ['Planschen', 12], ['Tauchen', 6]]],
+  ['Leute', 'Nenne einen berühmten Wissenschaftler.', [['Einstein', 55], ['Newton', 15], ['Marie Curie', 10], ['Darwin', 8], ['Hawking', 6]]],
+  ['Single-Männer', 'Nenne etwas, das du kochen kannst.', [['Nudeln', 40], ['Spiegelei', 22], ['Tiefkühlpizza', 15], ['Toast', 10], ['Steak', 6]]],
+  ['Leute', 'Nenne etwas, das man macht, wenn einem langweilig ist.', [['Aufs Handy schauen', 40], ['Fernsehen', 20], ['Schlafen', 15], ['Essen', 12], ['Lesen', 8]]],
+  ['Leute', 'Nenne etwas mit vielen Knöpfen.', [['Fernbedienung', 38], ['Tastatur', 25], ['Hemd', 12], ['Taschenrechner', 10], ['Handy', 8], ['Aufzug', 5]]],
+  ['Leute', 'Nenne ein schnelles Tier.', [['Gepard', 55], ['Pferd', 15], ['Löwe', 10], ['Falke', 8], ['Hase', 6]]],
+  ['Leute', 'Nenne etwas, das klebt.', [['Honig', 35], ['Kleber', 25], ['Klebeband', 15], ['Kaugummi', 12], ['Sirup', 8]]],
+  ['Leute', 'Nenne etwas, worüber Leute gern lügen.', [['Alter', 40], ['Gewicht', 22], ['Gehalt', 15], ['Größe', 10], ['Keine Zeit haben', 8]]],
+  ['Leute', 'Nenne etwas, das fliegt.', [['Vogel', 35], ['Flugzeug', 30], ['Hubschrauber', 12], ['Biene', 8], ['Drachen', 8], ['Drohne', 5]]],
+  ['Hundebesitzer', 'Nenne etwas, wovor dein Hund Angst hat.', [['Feuerwerk', 35], ['Gewitter', 25], ['Staubsauger', 18], ['Tierarzt', 10], ['Katzen', 6]]],
+  ['Leute', 'Nenne etwas, das man in den Kaffee tut.', [['Milch', 45], ['Zucker', 30], ['Sahne', 12], ['Sirup', 5], ['Zimt', 4]]],
+  ['Leute', 'Nenne einen Beruf, bei dem man sehr früh aufsteht.', [['Bäcker', 45], ['Bauer', 18], ['Postbote', 14], ['Pflegekraft', 10], ['Müllmann', 8]]],
+  ['verheiratete Männer', 'Nenne etwas, das du vergisst und wofür du Ärger bekommst.', [['Hochzeitstag', 45], ['Ihr Geburtstag', 25], ['Müll rausbringen', 12], ['Kinder abholen', 8], ['Milch kaufen', 6]]],
+  ['Leute', 'Nenne etwas, das man vor einem Vorstellungsgespräch macht.', [['Sich schick anziehen', 30], ['Antworten üben', 25], ['Über die Firma informieren', 18], ['Nervös sein', 12], ['Duschen', 8]]],
+  ['Leute', 'Nenne ein typisch deutsches Essen.', [['Bratwurst', 30], ['Sauerkraut', 20], ['Schnitzel', 18], ['Brezel', 14], ['Currywurst', 10], ['Spätzle', 6]]],
+  ['Leute', 'Nenne etwas, das man im Herbst macht.', [['Laub rechen', 25], ['Drachen steigen lassen', 22], ['Kastanien sammeln', 18], ['Pilze sammeln', 12], ['Kürbis schnitzen', 10], ['Tee trinken', 8]]],
+  ['Leute', 'Nenne ein Getränk, das man auf einer Party trinkt.', [['Bier', 40], ['Sekt', 18], ['Wein', 15], ['Cola', 10], ['Wodka', 8], ['Mate', 5]]],
+  ['Teenager', 'Nenne einen Ort, an dem du mit Freunden abhängst.', [['Bei jemandem zu Hause', 30], ['Im Park', 25], ['Im Einkaufszentrum', 15], ['Im Kino', 10], ['Bei McDonald\'s', 10]]],
+  ['Autofahrer', 'Nenne etwas, das man auf der Autobahn sieht.', [['Autos', 30], ['LKW', 25], ['Stau', 18], ['Raststätte', 12], ['Blitzer', 8], ['Baustelle', 5]]],
+  ['Leute', 'Nenne etwas, das man im Badezimmer findet.', [['Zahnbürste', 30], ['Handtuch', 22], ['Toilette', 18], ['Seife', 12], ['Spiegel', 10], ['Shampoo', 6]]],
+  ['Rentner', 'Nenne ein Hobby, das du hast.', [['Gartenarbeit', 35], ['Lesen', 20], ['Wandern', 15], ['Kreuzworträtsel', 12], ['Stricken', 10], ['Reisen', 5]]],
+  ['Leute', 'Nenne etwas, das man mit Bayern verbindet.', [['Oktoberfest', 35], ['Bier', 22], ['Lederhosen', 15], ['Berge', 12], ['FC Bayern', 10], ['Weißwurst', 5]]],
+  ['Eltern', 'Nenne etwas, das Kinder nie aufräumen.', [['Spielzeug', 40], ['Ihr Zimmer', 25], ['Klamotten', 18], ['Schuhe', 10], ['Geschirr', 5]]],
+  ['Leute', 'Nenne etwas, das man an einem See macht.', [['Schwimmen', 40], ['Bootfahren', 20], ['Picknick', 15], ['Angeln', 12], ['Sonnenbaden', 8]]],
+  ['Leute', 'Nenne etwas, das bei Glatteis passiert.', [['Ausrutschen', 35], ['Langsam gehen', 25], ['Streuen', 18], ['Zu Hause bleiben', 12], ['Auto stehen lassen', 6]]],
 ];
 </script>
 </body>
