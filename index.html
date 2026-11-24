@@ -778,7 +778,7 @@
       flex: 1;
       max-height: 44px;
       display: grid;
-      grid-template-columns: 1fr 1fr 56px;
+      grid-template-columns: 1fr 1fr 76px;
       align-items: center;
       gap: 10px;
       padding: 0 12px;
@@ -1999,6 +1999,7 @@ function poStart() {
   PO.scores = [0, 0];
   PO.roundNo = 0;
   PO.inGame = [];
+  PO.fresh = true;   // play the theme instead of the round sting
   poStartRound(false);
 }
 
@@ -2017,6 +2018,7 @@ function poStartRound(sudden) {
   showScreen('po-round');
   poRender();
   requestWakeLock();
+  if (PO.fresh) { PO.fresh = false; poSfxTheme(); } else poSfxRound();
 }
 
 function poSnap() {
@@ -2039,7 +2041,7 @@ function poTap(i) {
   R.revealed[i] = true;
   PO.flip = i;
   poEl('po-xflash').classList.remove('on');   // a right answer clears any ✗ still on screen
-  poDing();
+  poDing(R.phase === 'done' ? 0.5 : 1);       // quieter for leftovers shown after the round
   if (R.phase === 'done') { R.late[i] = true; return poRender(); }
   if (R.phase === 'sudden') return poRender();
   R.bank += R.q.a[i][1];
@@ -2066,7 +2068,7 @@ function poStrike() {
   if (R.phase === 'steal') { poXFlash(1); return poAward(R.control); }  // steal failed
   R.strikes++;
   poXFlash(R.strikes);
-  if (R.strikes >= 3) R.phase = 'steal';
+  if (R.strikes >= 3) { R.phase = 'steal'; setTimeout(poSfxUhOh, 750); }
   poRender();
 }
 
@@ -2075,6 +2077,7 @@ function poAward(team) {
   R.award = { team, pts: R.bank * R.mult };
   PO.scores[team] += R.award.pts;
   R.phase = 'done';
+  if (R.award.pts > 0) setTimeout(poSfxBank, 450);
   poRender();
 }
 
@@ -2164,7 +2167,7 @@ function poWin(team) {
   poEl('po-win-name').textContent = PO.teams[team];
   poEl('po-win-score').textContent = PO.teams[0] + ' ' + PO.scores[0] + '  –  ' + PO.scores[1] + ' ' + PO.teams[1];
   showScreen('po-win');
-  playCelebration();
+  poSfxWin();
 }
 
 function poQuit() {
@@ -2219,11 +2222,18 @@ function poRushGo() {
   poRushPanel('run');
   poRushRenderQ();
   const clock = poEl('po-rush-clock');
+  let lastSec = null;
   const tick = () => {
     const left = Math.max(0, (RU.end - Date.now()) / 1000);
-    clock.textContent = Math.ceil(left);
+    const sec = Math.ceil(left);
+    clock.textContent = sec;
     clock.classList.toggle('low', left <= 5);
-    if (left <= 0) poRushStop(true);
+    if (left <= 0) return poRushStop(true);
+    // a tick every second, and twice a second (higher, louder) for the last 5
+    const half = Math.ceil(left * 2);
+    if (sec !== lastSec || (left <= 5 && half !== tick.half)) poTick(left <= 5);
+    lastSec = sec;
+    tick.half = half;
   };
   tick();
   clearInterval(RU.timer);
@@ -2266,6 +2276,7 @@ function poRushRenderQ() {
 function poRushAnswer(i) {
   const RU = PO.rush;
   RU.picks[RU.player][RU.cur] = i;
+  poBlip();
   poRushAdvance();
 }
 
@@ -2282,7 +2293,7 @@ function poRushAdvance() {
 function poRushStop(timeUp) {
   const RU = PO.rush;
   clearInterval(RU.timer);
-  if (timeUp) poBuzz();
+  if (timeUp) poBuzz(1.2); else poSfxRound();
   RU.picks[RU.player] = RU.picks[RU.player].map(x => x === null ? -1 : x);
   RU.shown = 0;
   poRushPanel('reveal');
@@ -2305,7 +2316,8 @@ function poRushRenderReveal() {
     row.innerHTML = '<span class="rq"></span><span class="ra"></span><span class="rp"></span>';
     row.querySelector('.rq').textContent = q.q;
     row.querySelector('.ra').textContent = pick >= 0 ? q.a[pick][0] : '(no match)';
-    row.querySelector('.rp').textContent = shown ? pts : '?';
+    // 🥇 / 🥈 when the player hit the #1 or #2 answer on the board
+    row.querySelector('.rp').textContent = !shown ? '?' : (pick === 0 ? '🥇 ' : pick === 1 ? '🥈 ' : '') + pts;
     list.appendChild(row);
   });
   poEl('po-rev-title').textContent = 'Player ' + (p + 1) + ': the results';
@@ -2319,7 +2331,11 @@ function poRushRevealStep() {
   const RU = PO.rush;
   if (RU.shown < RU.qs.length) {
     const pick = RU.picks[RU.player][RU.shown];
-    if (pick >= 0) poDing(); else poBuzz();
+    if (pick < 0) poBuzz();
+    else {
+      poDing();
+      if (pick <= 1) [2637, 3136, 3520].forEach((f, k) => poTone(f, 0.25 + k * 0.07, 0.15, { type: 'sine', vol: 0.15 }));  // medal sparkle
+    }
     RU.shown++;
     return poRushRenderReveal();
   }
@@ -2332,36 +2348,106 @@ function poRushRevealStep() {
     ? PO.teams[PO.winner] + ' beat ' + PO_RUSH_GOAL + '! The Final Rush is yours!'
     : 'So close! ' + (PO_RUSH_GOAL - total) + ' points short of ' + PO_RUSH_GOAL + '.';
   poRushPanel('result');
-  if (won) playCelebration(); else poBuzz();
+  if (won) poSfxWin(); else poSfxSad();
 }
 
 // ── Sounds (synthesised, like the rest of the app) ───────────────────────────
-function poDing() {
-  const c = actx(), t = c.currentTime;
-  [[880, 0], [1320, 0.09]].forEach(([f, d]) => {
-    const o = c.createOscillator(), gn = c.createGain();
-    o.type = 'triangle';
-    o.frequency.value = f;
-    gn.gain.setValueAtTime(0.0001, t + d);
-    gn.gain.exponentialRampToValueAtTime(0.35, t + d + 0.01);
-    gn.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.4);
-    o.connect(gn); gn.connect(c.destination);
-    o.start(t + d); o.stop(t + d + 0.45);
-  });
+// Phone speakers reproduce very little below ~300 Hz, so everything here lives
+// in the mid/high range (a low buzzer is near-silent on a phone). All sounds
+// go through a compressor so they come out loud but don't clip.
+function poOut() {
+  const c = actx();
+  if (poOut.c !== c) {
+    const comp = c.createDynamicsCompressor();
+    comp.threshold.value = -18;
+    comp.ratio.value = 6;
+    const gain = c.createGain();
+    gain.gain.value = 1.6;
+    comp.connect(gain);
+    gain.connect(c.destination);
+    poOut.c = c;
+    poOut.node = comp;
+  }
+  return poOut.node;
 }
 
-function poBuzz() {
-  const c = actx(), t = c.currentTime;
-  [110, 117].forEach(f => {
+// One note: frequency f (Hz), starting `at` seconds from now, lasting `dur`.
+function poTone(f, at, dur, { type = 'triangle', vol = 0.3, to = 0, attack = 0.008 } = {}) {
+  try {
+    const c = actx(), t = c.currentTime + at;
     const o = c.createOscillator(), gn = c.createGain();
-    o.type = 'sawtooth';
-    o.frequency.value = f;
-    gn.gain.setValueAtTime(0.22, t);
-    gn.gain.setValueAtTime(0.22, t + 0.45);
-    gn.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
-    o.connect(gn); gn.connect(c.destination);
-    o.start(t); o.stop(t + 0.65);
-  });
+    o.type = type;
+    o.frequency.setValueAtTime(f, t);
+    if (to) o.frequency.exponentialRampToValueAtTime(to, t + dur);
+    gn.gain.setValueAtTime(0.0001, t);
+    gn.gain.exponentialRampToValueAtTime(vol, t + attack);
+    gn.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(gn);
+    gn.connect(poOut());
+    o.start(t);
+    o.stop(t + dur + 0.05);
+  } catch (_) {}
+}
+
+// Game start: a short bouncy fanfare
+function poSfxTheme() {
+  const mel = [[523, 0], [659, 0.12], [784, 0.24], [659, 0.36], [698, 0.5], [880, 0.62], [1047, 0.76]];
+  mel.forEach(([f, at], i) => poTone(f, at, i === mel.length - 1 ? 0.7 : 0.16, { type: 'square', vol: 0.16 }));
+  [[262, 0], [349, 0.5], [523, 0.76]].forEach(([f, at]) => poTone(f * 2, at, 0.45, { vol: 0.18 }));
+}
+
+// New round: quick rising sting
+function poSfxRound() {
+  [784, 988, 1175].forEach((f, i) => poTone(f, i * 0.08, 0.18, { type: 'square', vol: 0.15 }));
+  poTone(1568, 0.26, 0.45, { vol: 0.25 });
+}
+
+// Correct answer: bright two-note chime with a sparkle on top
+function poDing(level = 1) {
+  poTone(1047, 0, 0.35, { vol: 0.4 * level });
+  poTone(1568, 0.09, 0.5, { vol: 0.4 * level });
+  if (level >= 1) poTone(3136, 0.09, 0.25, { type: 'sine', vol: 0.12 });
+}
+
+// Wrong answer / strike: harsh buzzer (square waves, rich in audible harmonics)
+function poBuzz(dur = 0.7) {
+  poTone(185, 0, dur, { type: 'square', vol: 0.32, attack: 0.005 });
+  poTone(192, 0, dur, { type: 'square', vol: 0.32, attack: 0.005 });
+  poTone(370, 0, dur, { type: 'sawtooth', vol: 0.12, attack: 0.005 });
+}
+
+// Third strike: tense "uh-oh" before the steal
+function poSfxUhOh() {
+  poTone(659, 0, 0.28, { type: 'square', vol: 0.18 });
+  poTone(587, 0.3, 0.55, { type: 'square', vol: 0.18, to: 554 });
+}
+
+// Points go to a team: quick climbing run
+function poSfxBank() {
+  [659, 784, 988, 1319, 1568].forEach((f, i) => poTone(f, i * 0.06, 0.2, { type: 'square', vol: 0.13 }));
+  poTone(2093, 0.32, 0.5, { vol: 0.22 });
+}
+
+// Final Rush: clock tick (a short woodblock click); higher and louder near the end
+function poTick(urgent) {
+  poTone(urgent ? 2000 : 1500, 0, 0.05, { type: 'sine', vol: urgent ? 0.5 : 0.3, attack: 0.002, to: urgent ? 1600 : 1100 });
+}
+
+// Final Rush: answer logged (neutral blip, gives nothing away)
+function poBlip() { poTone(1200, 0, 0.07, { type: 'sine', vol: 0.2, attack: 0.003 }); }
+
+// A team wins the game / the Final Rush: victory fanfare with a sparkle trill
+function poSfxWin() {
+  const mel = [[523, 0, 0.1], [523, 0.12, 0.1], [523, 0.24, 0.1], [659, 0.36, 0.3], [587, 0.7, 0.14], [659, 0.86, 0.14], [784, 1.02, 0.9]];
+  mel.forEach(([f, at, d]) => poTone(f, at, d, { type: 'square', vol: 0.17 }));
+  [[392, 0.36, 0.3], [392, 0.7, 0.3], [523, 1.02, 0.9]].forEach(([f, at, d]) => poTone(f, at, d, { vol: 0.2 }));
+  [1568, 2093, 2637, 3136, 2637, 3136].forEach((f, i) => poTone(f, 1.1 + i * 0.07, 0.15, { type: 'sine', vol: 0.12 }));
+}
+
+// Final Rush: missed the goal
+function poSfxSad() {
+  [[523, 0], [494, 0.35], [466, 0.7]].forEach(([f, at]) => poTone(f, at, 0.32, { type: 'square', vol: 0.15 }));
+  poTone(440, 1.05, 0.9, { type: 'square', vol: 0.15, to: 415 });
 }
 
 // ── Question bank ─────────────────────────────────────────────────────────────
